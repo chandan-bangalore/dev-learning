@@ -1,0 +1,101 @@
+# ============================================================
+#  .gitignore
+#  Save this file as exactly ".gitignore" (no extension)
+#  in the ROOT of your project folder
+# ============================================================
+
+
+# ============================================================
+#  BUILD FOLDERS
+# ============================================================
+build/
+Build/
+BUILD/
+out/
+output/
+dist/
+bin/
+obj/
+release/
+Release/
+debug/
+Debug/
+
+
+# ============================================================
+#  COMPILED / BINARY FILES
+# ============================================================
+*.exe
+*.dll
+*.lib
+*.a
+*.so
+*.o
+*.obj
+*.pdb           # debug symbols
+*.ilk
+*.exp
+
+
+# ============================================================
+#  PYTHON SPECIFIC
+# ============================================================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+.eggs/
+dist/
+venv/
+.venv/
+env/
+.env
+
+
+# ============================================================
+#  CMAKE SPECIFIC
+# ============================================================
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+!CMakeLists.txt      # ! means DON'T ignore — keep your CMakeLists.txt
+
+
+# ============================================================
+#  VS CODE
+# ============================================================
+.vscode/             # remove this line if you want to share VS Code settings
+
+
+# ============================================================
+#  WINDOWS SPECIFIC
+# ============================================================
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+
+# ============================================================
+#  LOGS AND TEMP FILES
+# ============================================================
+*.log
+*.tmp
+*.temp
+*.swp
+*.bak
+*.cache
+
+
+# ============================================================
+#  SENSITIVE / SECRET FILES  (never push these!)
+# ============================================================
+.env                 # environment variables — API keys, passwords
+*.pem               # SSL certificates
+*.key               # private keys
+secrets.json
+config.local.*
