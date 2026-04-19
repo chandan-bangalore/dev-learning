@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My AI Journey — Course Notes & Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0f;
+    --surface: #16161a;
+    --surface2: #1e1e24;
+    --accent1: #f5c842;
+    --accent2: #ff6b6b;
+    --accent3: #6bcfff;
+    --accent4: #a8ff78;
+    --accent5: #c77dff;
+    --text: #e8e8f0;
+    --muted: #8888aa;
+    --border: #2a2a38;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+
+  /* Noise texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  .hero {
+    padding: 80px 40px 60px;
+    max-width: 900px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  .hero-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent1);
+    margin-bottom: 20px;
+    display: block;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(40px, 7vw, 72px);
+    font-weight: 900;
+    line-height: 1.05;
+    margin-bottom: 24px;
+    color: #fff;
+  }
+
+  h1 span {
+    color: var(--accent1);
+  }
+
+  .hero p {
+    font-size: 17px;
+    color: var(--muted);
+    max-width: 560px;
+    margin-bottom: 40px;
+  }
+
+  .course-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .nav-pill {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 6px 16px;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+
+  .nav-pill:hover, .nav-pill.active {
+    border-color: var(--accent1);
+    color: var(--accent1);
+    background: rgba(245, 200, 66, 0.08);
+  }
+
+  .main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 40px 100px;
+  }
+
+  .course-block {
+    margin-bottom: 80px;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .course-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    margin-bottom: 36px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .course-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 56px;
+    font-weight: 900;
+    line-height: 1;
+    opacity: 0.12;
+    flex-shrink: 0;
+    margin-top: -4px;
+  }
+
+  .course-meta {}
+
+  .course-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    display: inline-block;
+  }
+
+  .course-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 6px;
+  }
+
+  .course-date {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* Section cards */
+  .section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+
+  .section-header {
+    padding: 18px 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    user-select: none;
+    transition: background 0.15s;
+  }
+
+  .section-header:hover {
+    background: var(--surface2);
+  }
+
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    opacity: 0.5;
+  }
+
+  .section-title {
+    font-size: 15px;
+    font-weight: 500;
+    color: #fff;
+  }
+
+  .chevron {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    color: var(--muted);
+    transition: transform 0.25s;
+  }
+
+  .section.open .chevron { transform: rotate(180deg); }
+
+  .section-body {
+    display: none;
+    padding: 0 24px 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  .section.open .section-body { display: block; }
+
+  /* Content inside sections */
+  .concept {
+    margin-top: 20px;
+  }
+
+  .concept-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+    padding-top: 18px;
+    border-top: 1px dashed var(--border);
+  }
+
+  .concept:first-child .concept-title {
+    border-top: none;
+    padding-top: 0;
+  }
+
+  .concept p {
+    font-size: 14.5px;
+    color: #b8b8cc;
+    margin-bottom: 12px;
+    line-height: 1.75;
+  }
+
+  .example-box {
+    background: var(--surface2);
+    border-left: 3px solid var(--accent1);
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin: 14px 0;
+  }
+
+  .example-box.green { border-color: var(--accent4); }
+  .example-box.blue { border-color: var(--accent3); }
+  .example-box.red { border-color: var(--accent2); }
+  .example-box.purple { border-color: var(--accent5); }
+
+  .example-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    opacity: 0.5;
+    margin-bottom: 6px;
+  }
+
+  .example-box p {
+    font-size: 13.5px;
+    color: var(--text);
+    margin: 0;
+  }
+
+  .example-box strong {
+    color: #fff;
+    font-weight: 500;
+  }
+
+  .tip {
+    display: flex;
+    gap: 12px;
+    background: rgba(245, 200, 66, 0.06);
+    border: 1px solid rgba(245, 200, 66, 0.2);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin: 14px 0;
+  }
+
+  .tip-icon { flex-shrink: 0; font-size: 18px; }
+
+  .tip p {
+    font-size: 13.5px;
+    color: #d0d0e0;
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 12px 0;
+  }
+
+  .chip {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 4px 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    color: var(--muted);
+  }
+
+  .code-block {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    background: #0a0a0c;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    color: var(--accent3);
+    overflow-x: auto;
+    margin: 10px 0;
+    line-height: 1.6;
+    white-space: pre-wrap;
+  }
+
+  /* Color tags for courses */
+  .c1 { background: rgba(245, 200, 66, 0.12); color: var(--accent1); }
+  .c2 { background: rgba(255, 107, 107, 0.12); color: var(--accent2); }
+  .c3 { background: rgba(107, 207, 255, 0.12); color: var(--accent3); }
+  .c4 { background: rgba(168, 255, 120, 0.12); color: var(--accent4); }
+  .c5 { background: rgba(199, 125, 255, 0.12); color: var(--accent5); }
+
+  .course-num.c1t { color: var(--accent1); }
+  .course-num.c2t { color: var(--accent2); }
+  .course-num.c3t { color: var(--accent3); }
+  .course-num.c4t { color: var(--accent4); }
+  .course-num.c5t { color: var(--accent5); }
+
+  hr.divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 60px 0;
+  }
+
+  /* Summary ribbon */
+  .summary-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 32px;
+    margin-bottom: 60px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 24px;
+  }
+
+  .stat { text-align: center; }
+  .stat-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 36px;
+    font-weight: 900;
+    color: var(--accent1);
+    display: block;
+  }
+  .stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  @media (max-width: 600px) {
+    .hero { padding: 50px 20px 40px; }
+    .main { padding: 0 20px 60px; }
+    .course-header { flex-direction: column; gap: 12px; }
+    .course-num { font-size: 36px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <span class="hero-tag">Anthropic Skilljar · 5 Courses · March 2026</span>
+  <h1>Your <span>AI Journey</span><br>Made Simple</h1>
+  <p>A plain-English breakdown of your course notes — with real-life examples and how each concept helps you work smarter.</p>
+
+  <div class="course-nav">
+    <a class="nav-pill active" href="#c1">01 · AI Fluency</a>
+    <a class="nav-pill" href="#c2">02 · Claude 101</a>
+    <a class="nav-pill" href="#c3">03 · Claude Code</a>
+    <a class="nav-pill" href="#c4">04 · Agent Skills</a>
+    <a class="nav-pill" href="#c5">05 · Intro to MCP</a>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- Stats bar -->
+  <div class="summary-bar">
+    <div class="stat"><span class="stat-num">5</span><span class="stat-label">Courses Done</span></div>
+    <div class="stat"><span class="stat-num">4D</span><span class="stat-label">AI Framework</span></div>
+    <div class="stat"><span class="stat-num">∞</span><span class="stat-label">Possibilities</span></div>
+    <div class="stat"><span class="stat-num">1</span><span class="stat-label">You + Claude</span></div>
+  </div>
+
+  <!-- COURSE 1 -->
+  <div class="course-block" id="c1">
+    <div class="course-header">
+      <div class="course-num c1t">01</div>
+      <div class="course-meta">
+        <span class="course-tag c1">Foundations</span>
+        <div class="course-title">AI Fluency: Framework & Foundations</div>
+        <div class="course-date">03 March 2026</div>
+      </div>
+    </div>
+
+    <!-- Section: What is AI Fluency -->
+    <div class="section open">
+      <div class="section-header" onclick="toggle(this)">
+        <div><div class="section-label">Core Concept</div><div class="section-title">What is AI Fluency?</div></div>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="section-body">
+        <div class="concept">
+          <div class="concept-title">In simple words</div>
+          <p>AI Fluency means knowing <em>how</em> to work with AI — not just using it blindly, but understanding when to use it, how to talk to it, how to judge its output, and how to use it responsibly.</p>
+          <p>Think of it like learning to drive. You don't need to know how an engine works internally — but you do need to know traffic rules, how to steer, when to brake, and how to be a responsible driver.</p>
+        </div>
+
+        <div class="concept">
+          <div class="concept-title">3 Ways people engage with AI</div>
+          <div class="example-box">
+            <div class="example-label">Automation</div>
+            <p><strong>AI does the task for you.</strong> Example: "Write me a summary of this PDF." You give the task, Claude delivers.</p>
+          </div>
+          <div class="example-box green">
+            <div class="example-label">Augmentation</div>
+            <p><strong>You + AI collaborate.</strong> Example: You draft a blog post, Claude helps improve the tone, suggest headlines, and refine structure. You're partners.</p>
+          </div>
+          <div class="example-box blue">
+            <div class="example-label">Agency</div>
+            <p><strong>You set Claude up to act independently.</strong> Example: You configure Claude with your company's style guide, brand voice, and templates — so every time you ask for a report, it follows your rules automatically.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section: The 4Ds -->
+    <div class="section">
+      <div class="section-header" onclick="toggle(this)">
+        <div><div class="section-label">Core Framework</div><div class="section-title">The 4Ds — Your AI Collaboration Compass</div></div>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="section-body">
+        <div class="concept">
+          <div class="concept-title">Delegation — what to hand off</div>
+          <p>Deciding which tasks are better done by AI vs. yourself. Not everything needs AI, and not everything can be done without AI oversight.</p>
+          <div class="example-box">
+            <div class="example-label">Real-life example</div>
+            <p><strong>Good delegation:</strong> "Claude, draft the first version of this project proposal." <strong>Bad delegation:</strong> "Claude, decide whether I should quit my job." (Too personal, too high-stakes for AI alone.)</p>
+          </div>
+        </div>
+
+        <div class="concept">
+          <div class="concept-title">Description — how to communicate</div>
+          <p>This is about prompting well. The clearer you describe what you want, how you want it done, and how Claude should behave — the better the result. Claude can't read your mind.</p>
+          <div class="example-box green">
+            <div class="example-label">Try this prompt trick</div>
+            <p>"Before answering, please think through this problem carefully. Consider the different factors involved, potential constraints, and various approaches before recommending the best solution."</p>
+          </div>
+        </div>
+
+        <div class="concept">
+          <div class="concept-title">Discernment — evaluate what you get</div>
+          <p>AI outputs aren't always perfect. Discernment means asking: Is this accurate? Did Claude approach this the right way? Did it behave appropriately?</p>
+          <div class="example-box red">
+            <div class="example-label">Real-life example</div>
+            <p>Claude gives you a list of statistics in a report. <strong>Discernment means verifying the numbers</strong> before sending that report to your boss — AI can hallucinate facts with confidence.</p>
+          </div>
+        </div>
+
+        <div class="concept">
+          <div class="concept-title">Diligence — be responsible</div>
+          <p>Disclose when AI helped. Verify before sharing. Be honest about what's AI-generated and take responsibility for what you put out into the world.</p>
+          <div class="tip">
+            <div class="tip-icon">💡</div>
+            <p>Different contexts have different rules. Academic writing has strict AI policies. A personal email? Much more flexible. Know the rules of your context.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section: 6 Prompting Techniques -->
+    <div class="section">
+      <div class="section-header" onclick="toggle(this)">
+        <div><div class="section-label">Practical Skills</div><div class="section-title">6 Prompting Techniques That Actually Work</div></div>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="section-body">
+        <div class="concept">
+          <div class="concept-title">The six techniques</div>
+          <div class="chips">
+            <span class="chip">Give Context</span>
+            <span class="chip">Show Examples</span>
+            <span class="chip">Specify Constraints</span>
+            <span class="chip">Break into Steps</span>
+            <span class="chip">Ask it to Think First</span>
+            <span class="chip">Define Role/Tone</span>
+          </div>
+          <div class="example-box">
+            <div class="example-label">Context example</div>
+            <p>❌ "Write an email." &nbsp;→&nbsp; ✅ "Write a polite follow-up email to a client who hasn't responded in 2 weeks about a proposal I sent. Keep it under 100 words, professional tone."</p>
+          </div>
+          <div class="example-box purple">
+            <div class="example-label">Secret weapon</div>
+            <p>Ask Claude to improve your own prompt! Try: <strong>"How could I rephrase my question to get a better answer from you?"</strong></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COURSE 2 -->
+  <div class="course-block" id="c2">
+    <div class="course-header">
+      <div class="course-num c2t">02</div>
+      <div class="course-meta">
+        <span class="course-tag c2">Claude Platform</span>
+        <div class="course-title">Claude 101</div>
+        <div class="course-date">06 March 2026</div>
+      </div>
+    </div>
+
+    <div class="section open">
+      <div class="section-header" onclick="toggle(this)">
+        <div><div class="section-label">Core Concept</div><div class="section-title">Claude is More Than a Chatbot</div></div>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="section-body">
+        <div class="concept">
+          <div class="concept-title">Built to be: Helpful, Harmless, Honest</div>
+          <p>Unlike a search engine (just finds info) or a calculator (just computes), Claude reasons, understands nuance, asks for clarification, and collaborates. Think of it as a very capable intern who has read everything — but needs your direction.</p>
+          <div class="example-box">
+            <div class="example-label">The right mindset</div>
+            <p>Talk to Claude <strong>like a coworker</strong> — naturally, concisely, and conversationally. You don't need special magic words.</p>
+          </div>
+        </div>
+
+        <div class="concept">
+          <div class="concept-title">The 3-part prompt structure</div>
+          <div class="example-box blue">
+            <div class="example-label">Set the stage → Define the task → Specify rules</div>
+            <p><strong>Set the stage:</strong> "I'm a marketing lead at an indie streaming startup preparing an investor pitch deck."<br><br>
+            <strong>Define the task:</strong> "Research the current state of independent film streaming — trends, competitors, opportunities."<br><br>
+            <strong>Specify rules:</strong> "Use web search, cite sources, structure as a professional report."</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header" onclick="toggle(this)">
+        <div><div class="section-label">Feature Deep-Dive</div><div class="section-title">Projects, Artifacts & Skills</div></div>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="section-body">
+        <div class="concept">
+          <div class="concept-title">Projects — your ongoing workspaces</div>
+          <p>A Project is like a shared notebook with Claude. You upload your reference materials (meeting notes, reports, templates), and Claude always has that context. No need to re-explain your world every conversation.</p>
+          <div class="example-box">
+            <div class="example-label">When to use a Project</div>
+            <p>You're managing a product launch for 3 months. Create a Project, upload your roadmap, brand guidelines, and meeting notes. Now Claude always knows the context when you ask "What should we prioritize this week?"</p>
+          </div>
+          <div class="tip">
+            <div class="tip-icon">🧠</div>
+            <p><strong>RAG Mode:</strong> When you upload lots of documents, Claude automatically uses "Retrieval Augmented Generation" — it doesn't forget your files, it smartly pulls the relevant bits. Up to 10x more capacity!</p>
+          </div>
+        </div>
+
+        <div class="concept">
+          <div class="concept-title">Artifacts — interactive outputs</div>
+          <p>Instead of plain text in chat, Artifacts are standalone, rendered outputs — a working website, a live chart, a downloadable document — visible in a panel beside your chat. Automatically created for complex, reusable content.</p>
+          <div class="example-box green">
+            <div class="example-label">Real-life example</div>
+            <p>Ask Claude to "build a budget tracker in HTML" — it won't just show you code. It'll render a working, interactive budget tracker you can use right away.</p>
+          </div>
+        </div>
+
+        <div class="concept">
+          <div class="concept-title">Skills — expertise packages for Claude</div>
+          <p>Skills are pre-loaded instructions that make Claude really good at specific tasks. Anthropic provides built-in Skills for creating Excel, Word, PowerPoint, and PDF files. You can also create your own Custom Skills!</p>
+          <div class="example-box purple">
+            <div class="example-label">Custom Skill idea</div>
+            <p>Create a "Weekly Report" skill that always uses your company's template, brand colors, and writing style — so every report Claude writes for you looks like it came from your team.</p>
+          </div>
+          <p style="font-size:13px; color: var(--muted); margin-top: 8px;">⚡ <strong>Key distinction:</strong> Projects store knowledge. Skills perform tasks.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header" onclick="toggle(this)">
+        <div><div class="section-label">Power Feature</div><div class="section-title">Connectors & Enterprise Search</div></div>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="section-body">
+        <div class="concept">
+          <div class="concept-title">What are Connectors?</div>
+          <p>Connectors link Claude to your actual tools — Slack, Gmail, SharePoint, Google Drive, and more. Claude can then search and synthesize information across all of them at once.</p>
+          <div class="example-box red">
+            <div class="example-label">Real-life power example</div>
+            <p>"What happened in the business last week?" — Claude searches your Slack messages, emails, SharePoint docs, and Drive files simultaneously, then gives you a unified summary with citations.</p>
+          </div>
+        </div>
+
+        <div class="concept">
+          <div class="concept-title">Research Mode</div>
+          <p>Turns Claude from a conversational partner into a systematic investigator. It plans its research approach, conducts multiple searches, synthesizes findings, and cites everything. Think of it as having a research analyst on demand.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COURSE 3 -->
+  <div class="course-block" id="c3">
+    <div class="course-header">
+      <div class="course-num c3t">03</div>
+      <div class="course-meta">
+        <span class="course-tag c3">Developer Tools</span>
+        <div class="course-title">Claude Code in Action</div>
+        <div class="course-date">16 March 2026</div>
+      </div>
+    </div>
+
+    <div class="section open">
+      <div class="section-header" onclick="toggle(this)">
+        <div><div class="section-label">Core Concept</div><div class="section-title">What Makes Claude Code Different?</div></div>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="section-body">
+        <div class="concept">
+          <div class="concept-title">Language Model vs. Coding Assistant</div>
+          <p>A plain language model can only read and write text — it can't touch your files or run commands. Claude Code adds "tool use" — it can actually read your files, write code, run commands, and make changes to your project.</p>
+          <div class="example-box">
+            <div class="example-label">Analogy</div>
+            <p>A language model is like a brilliant consultant who gives advice over the phone. Claude Code is that same consultant who's actually <strong>sitting at your desk</strong>, with access to your computer, your files, and your tools.</p>
+          </div>
+        </div>
+
+        <div class="concept">
+          <div class="concept-title">CLAUDE.md — your project's memory file</div>
+          <p>Run <code>/init</code> in a new project and Claude will analyze your codebase and create a <code>CLAUDE.md</code> file — a persistent summary of your project's architecture, commands, and style. It's included in every request automatically.</p>
+          <div class="chips">
+            <span class="chip">CLAUDE.md — shared with team</span>
+            <span class="chip">CLAUDE.local.md — just you</span>
+            <span class="chip">~/.claude/CLAUDE.md — all projects</span>
+          </div>
+          <div class="tip">
+            <div class="tip-icon">💡</div>
+            <p>Use the <strong># command</strong> to add instructions to CLAUDE.md on the fly: type <code># Only add comments for complex logic</code> and Claude merges it into your file.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header" onclick="toggle(this)">
+        <div><div class="section-label">Power Features</div><div class="section-title">Planning Mode, Thinking Modes & Context Management</div></div>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="section-body">
+        <div class="concept">
+          <div class="concept-title">Planning Mode (Shift + Tab twice)</div>
+          <p>Before making changes, Claude reads more of your codebase, creates a detailed plan, shows you exactly what it intends to do, and waits for your approval. Great for big changes.</p>
+          <div class="example-box blue">
+            <div class="example-label">When to use</div>
+            <p>You're refactoring your authentication system across 10+ files. Enable Planning Mode first — Claude will map out exactly what it'll touch before doing anything.</p>
+          </div>
+        </div>
+
+        <div class="concept">
+          <div class="concept-title">Thinking Modes — depth on demand</div>
+          <div class="chips">
+            <span class="chip">Think</span>
+            <span class="chip">Think more</span>
+            <span class="chip">Think a lot</span>
+            <span class="chip">Think longer</span>
+            <span class="chip">Ultrathink</span>
+          </div>
+          <p style="margin-top:10px;">Each mode gives Claude more time and "mental space" to reason through hard problems before answering. Use for tricky bugs, complex algorithms, or architectural decisions.</p>
+        </div>
+
+        <div class="concept">
+          <div class="concept-title">Context Management</div>
+          <div class="example-box green">
+            <div class="example-label">Commands</div>
+            <p><strong>/compact</strong> — Summarizes conversation history, keeps key info, frees up space.<br><strong>/clear</strong> — Fresh start, blank slate.<br><strong>Double Escape</strong> — Rewind to an earlier point in the conversation.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header" onclick="toggle(this)">
+        <div><div class="section-label">Advanced</div><div class="section-title">Custom Commands, MCP & GitHub Integration</div></div>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="section-body">
+        <div class="concept">
+          <div class="concept-title">Custom slash commands</div>
+          <p>Create your own <code>/audit</code> or <code>/write_tests</code> commands by putting markdown files in <code>.claude/commands/</code>. The filename becomes the command. They can accept arguments too.</p>
+          <div class="code-block">/write_tests the use-auth.ts file in the hooks directory</div>
+        </div>
+
+        <div class="concept">
+          <div class="concept-title">MCP Servers — superpowers for Claude Code</div>
+          <p>MCP servers give Claude new abilities. For example, the Playwright server lets Claude control a real web browser — so it can see your website visually, not just the code, and make smarter styling decisions.</p>
+          <div class="code-block">claude mcp add playwright npx @playwright/mcp@latest</div>
+        </div>
+
+        <div class="concept">
+          <div class="concept-title">GitHub Integration</div>
+          <p>Run <code>/install-github-app</code> and Claude becomes an automated team member on GitHub — it can respond to <code>@claude</code> mentions on issues/PRs, review pull requests, and run as a GitHub Action.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COURSE 4 -->
+  <div class="course-block" id="c4">
+    <div class="course-header">
+      <div class="course-num c4t">04</div>
+      <div class="course-meta">
+        <span class="course-tag c4">Automation</span>
+        <div class="course-title">Intro to Agent Skills</div>
+        <div class="course-date">21 March 2026</div>
+      </div>
+    </div>
+
+    <div class="section open">
+      <div class="section-header" onclick="toggle(this)">
+        <div><div class="section-label">Core Concept</div><div class="section-title">What Are Skills (in Claude Code)?</div></div>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="section-body">
+        <div class="concept">
+          <div class="concept-title">The core idea</div>
+          <p>Skills are reusable markdown files that teach Claude Code how to handle specific tasks — automatically, every time. Instead of explaining your PR review checklist over and over, write it once as a skill. Claude loads and applies it whenever you ask for a PR review.</p>
+          <div class="example-box">
+            <div class="example-label">Analogy</div>
+            <p>A Skill is like an SOP (Standard Operating Procedure) at a company. New employee? Read the SOP. Claude is the employee; your SKILL.md is the SOP.</p>
+          </div>
+        </div>
+
+        <div class="concept">
+          <div class="concept-title">CLAUDE.md vs. Skills vs. Slash Commands</div>
+          <div class="example-box blue">
+            <div class="example-label">The key difference</div>
+            <p><strong>CLAUDE.md</strong> — loads into EVERY conversation (always on)<br>
+            <strong>Skills</strong> — loads ON DEMAND when Claude detects the task<br>
+            <strong>Slash commands</strong> — only when you explicitly type them</p>
+          </div>
+          <p>Skills are smarter than commands — they activate <em>automatically</em> based on what you're asking for.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header" onclick="toggle(this)">
+        <div><div class="section-label">Practical How-To</div><div class="section-title">Creating Your Own Skills</div></div>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="section-body">
+        <div class="concept">
+          <div class="concept-title">Skill structure (it's just a markdown file!)</div>
+          <div class="code-block">---
+name: pr-description
+description: Writes pull request descriptions. Use when creating a PR
+           or summarizing changes for a pull request.
+---
+
+When writing a PR description:
+1. Run `git diff main...HEAD` to see all changes
+2. Write: ## What, ## Why, ## Changes</div>
+
+          <p style="margin-top:12px;">The <strong>description field</strong> is the most important part — it's how Claude decides when to use the skill. Write it like: "Use when [specific situation]."</p>
+        </div>
+
+        <div class="concept">
+          <div class="concept-title">Skill locations & priority</div>
+          <div class="chips">
+            <span class="chip">~/.claude/skills → personal, all projects</span>
+            <span class="chip">.claude/skills → project-specific, shared</span>
+          </div>
+          <p style="margin-top:10px;">Priority order: Enterprise > Personal > Project > Plugins. If there's a conflict, higher priority wins.</p>
+        </div>
+
+        <div class="concept">
+          <div class="concept-title">Subagents — delegating with fresh context</div>
+          <p>A subagent is an isolated Claude instance you can delegate specific tasks to. It starts with a clean context (no baggage from your current conversation), which is great for focused, parallel work.</p>
+          <div class="tip">
+            <div class="tip-icon">🤖</div>
+            <p>You can create a custom subagent (e.g., "frontend-security-reviewer") that automatically loads specific skills like <code>accessibility-audit</code> and <code>performance-check</code> every time it runs.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COURSE 5 -->
+  <div class="course-block" id="c5">
+    <div class="course-header">
+      <div class="course-num c5t">05</div>
+      <div class="course-meta">
+        <span class="course-tag c5">Integration</span>
+        <div class="course-title">Intro to MCP</div>
+        <div class="course-date">25 March 2026</div>
+      </div>
+    </div>
+
+    <div class="section open">
+      <div class="section-header" onclick="toggle(this)">
+        <div><div class="section-label">Core Concept</div><div class="section-title">What is MCP and Why Does it Matter?</div></div>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="section-body">
+        <div class="concept">
+          <div class="concept-title">The problem MCP solves</div>
+          <p>Say you're building an AI app where users can ask about their GitHub data. GitHub has hundreds of features — repos, PRs, issues, projects, webhooks… Without MCP, you'd have to write, test, and maintain all the integration code yourself. That's months of work.</p>
+          <div class="example-box red">
+            <div class="example-label">Without MCP</div>
+            <p>You write code to call GitHub's API → define every tool schema → handle all edge cases → maintain it forever. 😩</p>
+          </div>
+          <div class="example-box green">
+            <div class="example-label">With MCP</div>
+            <p>GitHub (or someone else) publishes an official MCP server. You connect to it. Done. Claude now has access to all GitHub tools. 🎉</p>
+          </div>
+        </div>
+
+        <div class="concept">
+          <div class="concept-title">MCP in plain English</div>
+          <p>MCP is a <strong>standardized connector</strong> between Claude and external tools/services. Like how USB-C is a standard that lets any device plug into any charger — MCP is the standard that lets Claude plug into any service.</p>
+          <div class="tip">
+            <div class="tip-icon">⚡</div>
+            <p><strong>MCP ≠ Tool Use.</strong> Tool use is how Claude calls tools. MCP is where those tools come from — pre-built, pre-tested, ready to use.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header" onclick="toggle(this)">
+        <div><div class="section-label">Technical Depth</div><div class="section-title">Building with MCP: Tools, Resources & Prompts</div></div>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="section-body">
+        <div class="concept">
+          <div class="concept-title">Three things an MCP Server can provide</div>
+          <div class="example-box">
+            <div class="example-label">Tools — actions Claude can perform</div>
+            <p>Example: <code>read_document(doc_id)</code> or <code>edit_document(doc_id, old, new)</code>. Claude calls these like functions.</p>
+          </div>
+          <div class="example-box blue">
+            <div class="example-label">Resources — data Claude can read</div>
+            <p>Like GET endpoints. A user types "@deposition.md" and your MCP server serves that file's content directly into the conversation.</p>
+          </div>
+          <div class="example-box purple">
+            <div class="example-label">Prompts — pre-built expert instructions</div>
+            <p>You craft and test a great prompt for reformatting documents. Bundle it in your MCP server. Now every user gets your expert-level prompt — they don't need to figure it out themselves.</p>
+          </div>
+        </div>
+
+        <div class="concept">
+          <div class="concept-title">Defining a tool (Python SDK)</div>
+          <p>It's surprisingly readable — just a function with a decorator:</p>
+          <div class="code-block">@mcp.tool(
+    name="read_doc_contents",
+    description="Read the contents of a document."
+)
+def read_document(doc_id: str):
+    return docs[doc_id]</div>
+          <p style="margin-top:10px;">The MCP Python SDK handles all the protocol details. You just write normal Python functions.</p>
+        </div>
+
+        <div class="concept">
+          <div class="concept-title">Testing with the MCP Inspector</div>
+          <p>Run <code>mcp dev mcp_server.py</code> and get a live browser interface to test your tools interactively — no need to build a full app first. See real inputs, real outputs, debug in real time.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header" onclick="toggle(this)">
+        <div><div class="section-label">How It All Connects</div><div class="section-title">The Full Picture: Your AI Stack</div></div>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="section-body">
+        <div class="concept">
+          <div class="concept-title">All 5 courses — how they build on each other</div>
+          <div class="example-box">
+            <div class="example-label">Course 1 — AI Fluency</div>
+            <p>🧠 The mindset. Know WHY and WHEN to use AI, how to communicate, how to judge output, and how to be responsible.</p>
+          </div>
+          <div class="example-box green">
+            <div class="example-label">Course 2 — Claude 101</div>
+            <p>🖥️ The platform. Projects, Artifacts, Skills, Connectors — the features that make Claude a real productivity tool.</p>
+          </div>
+          <div class="example-box blue">
+            <div class="example-label">Course 3 — Claude Code</div>
+            <p>💻 The developer layer. Claude as an AI pair programmer with real access to your codebase, with planning, memory, and GitHub integration.</p>
+          </div>
+          <div class="example-box red">
+            <div class="example-label">Course 4 — Agent Skills</div>
+            <p>⚡ The automation layer. Teach Claude your workflows once; it applies them automatically forever.</p>
+          </div>
+          <div class="example-box purple">
+            <div class="example-label">Course 5 — MCP</div>
+            <p>🔌 The integration layer. Connect Claude to any external service or data source without writing complex integration code from scratch.</p>
+          </div>
+          <div class="tip" style="margin-top: 20px;">
+            <div class="tip-icon">🚀</div>
+            <p>You've gone from <strong>"what is AI?"</strong> all the way to <strong>"how do I build AI-powered tools that connect to real services?"</strong> — in 5 courses. That's a serious foundation.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  function toggle(header) {
+    const section = header.parentElement;
+    section.classList.toggle('open');
+  }
+
+  // Smooth scroll for nav pills
+  document.querySelectorAll('.nav-pill').forEach(pill => {
+    pill.addEventListener('click', e => {
+      e.preventDefault();
+      const target = document.querySelector(pill.getAttribute('href'));
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.querySelectorAll('.nav-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+    });
+  });
+
+  // Auto-open first section of each course on scroll (optional observer)
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        document.querySelectorAll('.nav-pill').forEach(p => p.classList.remove('active'));
+        const pill = document.querySelector(`.nav-pill[href="#${id}"]`);
+        if (pill) pill.classList.add('active');
+      }
+    });
+  }, { threshold: 0.2 });
+
+  document.querySelectorAll('.course-block').forEach(b => observer.observe(b));
+</script>
+</body>
+</html>
