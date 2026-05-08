@@ -1,0 +1,839 @@
+================================================================================
+  MATLAB / OCTAVE — PHASE 3 REVISION GUIDE
+  Strings, Cell Arrays, Structs, File I/O,
+  Plotting, Vectorization & Error Handling
+  All exercises, solutions, and key interview notes
+================================================================================
+
+HOW TO USE THIS FILE
+--------------------
+- Attempt every exercise in Octave before reading the solution.
+- Sections marked [INTERVIEW TRAP] are frequently tested — memorise these.
+- The combined exercise at the end ties all topics together — do it last.
+
+================================================================================
+  TOPIC 1: STRING OPERATIONS
+================================================================================
+
+KEY CONCEPTS
+------------
+- MATLAB has two string systems: char arrays (single quotes) and string
+  objects (double quotes, R2017+). In Octave, use char arrays throughout.
+- A char array is just a numeric vector of ASCII codes — all vector
+  indexing operations work on it.
+- Never use == to compare strings. Use strcmp() or strcmpi().
+- str2double is safer than str2num (str2num calls eval internally).
+- sprintf builds a formatted string (like fprintf but returns it instead
+  of printing).
+- strcat trims trailing spaces from char inputs — use [] concatenation
+  when spaces matter.
+
+QUICK REFERENCE
+---------------
+  % Case
+  upper(s)                    % 'HELLO'
+  lower(s)                    % 'hello'
+
+  % Length & indexing (char is a vector)
+  length(s)                   % number of characters
+  s(1:5)                      % first 5 characters
+  s(end)                      % last character
+
+  % Concatenation
+  [a b]                       % join — preserves spaces
+  [a ' ' b]                   % join with space
+  strcat(a, b)                % join — trims trailing spaces!
+  sprintf('x=%d', 42)        % build formatted string → 'x=42'
+
+  % Search & replace
+  strfind(s, pattern)         % indices of pattern in s
+  strrep(s, old, new)         % replace all occurrences
+
+  % Comparison — NEVER use ==
+  strcmp(a, b)                % case-sensitive equality → 0 or 1
+  strcmpi(a, b)               % case-insensitive equality
+
+  % Split & trim
+  strsplit(s, delimiter)      % splits into cell array
+  strtrim(s)                  % strip leading/trailing whitespace
+
+  % Type conversion
+  num2str(x)                  % number → string
+  num2str(x, '%.2f')         % number → formatted string
+  str2double(s)               % string → double (safe)
+  str2num(s)                  % string → number (uses eval — avoid)
+  char(65)                    % ASCII code → character → 'A'
+  double('A')                 % character → ASCII code → 65
+
+[INTERVIEW TRAP] 'abc' == 'abc' returns [1 1 1], not a single true.
+                 Always use strcmp() for string equality.
+[INTERVIEW TRAP] strcat('hello ', 'world') → 'helloworld'.
+                 strcat trims trailing spaces from char inputs.
+                 Use ['hello ' 'world'] to preserve spaces.
+[INTERVIEW TRAP] str2num uses eval() internally — security risk and slow.
+                 Always use str2double for converting strings to numbers.
+[INTERVIEW TRAP] Char indexing is 1-based like everything else.
+                 s(1) is the first character, not s(0).
+[INTERVIEW TRAP] length(s) gives number of characters for a string.
+                 But on a 2D char array (array of strings), it gives the
+                 longest dimension — use size(s,2) to be safe.
+
+--------------------------------------------------------------------------------
+EXERCISE 1: The String Parser
+--------------------------------------------------------------------------------
+TASK:
+  Given the string: s = 'John,Smith,42,Engineer,Boston'
+  (format: FirstName,LastName,Age,Job,City)
+
+  1. Split s on comma into a cell array called parts.
+  2. Extract first name, last name, age (as a number), job, city
+     into separate variables.
+  3. Build a formatted summary string using sprintf:
+       'John Smith (age 42) works as Engineer in Boston'
+  4. Convert the full name to uppercase.
+  5. Check if the job is 'Engineer' using the correct string function.
+  6. Find the position of the first comma in s using strfind.
+  7. Replace 'Boston' with 'New York' in the original string.
+
+SOLUTION:
+----------
+  s = 'John,Smith,42,Engineer,Boston';
+
+  % 1. Split on comma
+  parts = strsplit(s, ',');
+
+  % 2. Extract fields
+  first_name = parts{1};          % 'John'
+  last_name  = parts{2};          % 'Smith'
+  age        = str2double(parts{3}); % 42
+  job        = parts{4};          % 'Engineer'
+  city       = parts{5};          % 'Boston'
+
+  % 3. Formatted summary
+  summary = sprintf('%s %s (age %d) works as %s in %s', ...
+                    first_name, last_name, age, job, city);
+  disp(summary)
+
+  % 4. Uppercase full name
+  full_name = [first_name ' ' last_name];
+  upper(full_name)               % 'JOHN SMITH'
+
+  % 5. Check job
+  is_engineer = strcmp(job, 'Engineer');   % → 1
+
+  % 6. First comma position
+  comma_positions = strfind(s, ',');
+  first_comma = comma_positions(1);        % → 5
+
+  % 7. Replace city
+  s_new = strrep(s, 'Boston', 'New York');
+  disp(s_new)
+
+EXPECTED OUTPUT:
+  summary    = 'John Smith (age 42) works as Engineer in Boston'
+  full_name uppercase = 'JOHN SMITH'
+  is_engineer = 1
+  first_comma = 5
+  s_new = 'John,Smith,42,Engineer,New York'
+
+KEY INSIGHTS:
+  - strsplit returns a cell array. Use {} to extract each element.
+  - str2double converts the age string '42' to the number 42 safely.
+  - sprintf is the right tool to build strings — fprintf prints and discards.
+  - strcmp returns scalar 1/0 — correct for use in if conditions.
+  - strfind returns ALL positions — index with (1) to get the first one.
+  - The ... (ellipsis) continues a long line to the next line in MATLAB.
+
+--------------------------------------------------------------------------------
+EXERCISE 1B: Extended — String Building & Analysis
+--------------------------------------------------------------------------------
+TASK:
+  Given a sentence: sentence = 'the quick brown fox jumps over the lazy dog'
+  1. Count how many words are in the sentence (hint: split on space).
+  2. Find how many times the letter 'o' appears (case-insensitive).
+  3. Capitalise the first letter of each word and rebuild the sentence.
+     (Hint: loop over the cell array from strsplit)
+  4. Check if the sentence contains the word 'fox' — return logical 1/0.
+  5. Build a new string that reverses the word order.
+
+SOLUTION:
+----------
+  sentence = 'the quick brown fox jumps over the lazy dog';
+
+  % 1. Word count
+  words      = strsplit(sentence, ' ');
+  word_count = numel(words);            % → 9
+
+  % 2. Count letter 'o' (case-insensitive)
+  o_count = numel(strfind(lower(sentence), 'o'));  % → 4
+
+  % 3. Capitalise first letter of each word
+  for i = 1:numel(words)
+      w = words{i};
+      words{i} = [upper(w(1)) w(2:end)];
+  end
+  capitalised = strjoin(words, ' ');
+  % → 'The Quick Brown Fox Jumps Over The Lazy Dog'
+
+  % 4. Check for 'fox'
+  has_fox = ~isempty(strfind(sentence, 'fox'));   % → 1
+
+  % 5. Reverse word order
+  words_orig = strsplit(sentence, ' ');
+  reversed   = strjoin(words_orig(end:-1:1), ' ');
+  % → 'dog lazy the over jumps fox brown quick the'
+
+EXPECTED OUTPUT:
+  word_count  = 9
+  o_count     = 4
+  capitalised = 'The Quick Brown Fox Jumps Over The Lazy Dog'
+  has_fox     = 1
+  reversed    = 'dog lazy the over jumps fox brown quick the'
+
+KEY INSIGHTS:
+  - numel(words) counts cells in the cell array from strsplit.
+  - strfind returns an array; numel on it counts all matches.
+  - upper(w(1)) capitalises just the first character; w(2:end) keeps the rest.
+  - strjoin (opposite of strsplit) concatenates a cell array with a delimiter.
+  - words_orig(end:-1:1) reverses a cell array — same colon trick as vectors.
+
+
+================================================================================
+  TOPIC 2: CELL ARRAYS & STRUCTS
+================================================================================
+
+KEY CONCEPTS
+------------
+- Cell arrays hold heterogeneous data (mixed types, mixed sizes).
+- () indexing returns a cell container. {} indexing extracts the contents.
+- Structs group named fields — accessed with dot notation (s.field).
+- Dynamic field access: s.(fieldname_string) — lets you loop over fields.
+- cellfun applies a function to every cell and collects results.
+- fieldnames(s) returns all field names as a cell array of strings.
+- Struct arrays: s(i).field — an array where each element is a struct.
+
+QUICK REFERENCE — CELL ARRAYS
+-------------------------------
+  c = {42, 'hello', [1 2 3]}  % create
+  c{2}                         % extract content → 'hello'
+  c(2)                         % extract cell → {'hello'}
+  c{end+1} = 'new'             % append
+  numel(c)                     % number of cells
+  iscell(c)                    % → 1
+  cellfun(@length, c)          % apply fn to each cell
+  cellfun(@(x) x*2, c, 'UniformOutput', false)  % when output sizes vary
+
+QUICK REFERENCE — STRUCTS
+--------------------------
+  s.name  = 'Alice'            % create / set field
+  s.score = 88
+  s.name                       % access field → 'Alice'
+  fieldnames(s)                % → {'name','score'}
+  isfield(s, 'score')          % → 1
+  rmfield(s, 'score')          % remove field (returns modified copy)
+  isstruct(s)                  % → 1
+  s.(var)                      % dynamic field: var = 'name' → s.name
+
+  % Struct array
+  arr(1).name = 'Alice'; arr(1).score = 88;
+  arr(2).name = 'Bob';   arr(2).score = 74;
+  arr(1).score                 % → 88
+
+[INTERVIEW TRAP] c(1) returns a cell, c{1} returns the content.
+                 'Cannot add cell array' error means you used () not {}.
+[INTERVIEW TRAP] cellfun with outputs of different sizes needs:
+                 'UniformOutput', false — otherwise errors.
+[INTERVIEW TRAP] rmfield does NOT modify in place — it returns a new struct.
+                 Must capture: s = rmfield(s, 'field').
+[INTERVIEW TRAP] Dynamic field access uses parentheses: s.(var) not s.var
+                 when var is a string variable.
+
+--------------------------------------------------------------------------------
+EXERCISE 2: Student Database
+--------------------------------------------------------------------------------
+TASK:
+  Build a small student database using structs and cell arrays.
+
+  1. Create a struct array 'db' with 4 students. Each struct has:
+       name  (string), scores (1x3 vector of test scores), year (integer)
+     Data:
+       Alice, [85 90 78], 2
+       Bob,   [70 65 80], 3
+       Carol, [92 88 95], 1
+       Dave,  [60 72 68], 2
+
+  2. Loop over the struct array and print each student's name and average
+     score (rounded to 1 decimal place) using fprintf.
+
+  3. Find the student with the highest average score. Print their name.
+
+  4. Use cellfun to extract all names into a cell array called 'all_names'.
+     (Hint: build a cell array of names first, then use it.)
+
+  5. Create a cell array 'report' where each cell is a formatted string:
+       'Alice: avg=84.3, year=2'
+     for every student.
+
+  6. Use fieldnames() to print all field names of the struct.
+
+SOLUTION:
+----------
+  % 1. Build struct array
+  db(1).name = 'Alice'; db(1).scores = [85 90 78]; db(1).year = 2;
+  db(2).name = 'Bob';   db(2).scores = [70 65 80]; db(2).year = 3;
+  db(3).name = 'Carol'; db(3).scores = [92 88 95]; db(3).year = 1;
+  db(4).name = 'Dave';  db(4).scores = [60 72 68]; db(4).year = 2;
+
+  % 2. Print name and average
+  for i = 1:length(db)
+      avg = mean(db(i).scores);
+      fprintf('%s: avg = %.1f\n', db(i).name, avg);
+  end
+
+  % 3. Find highest average
+  avgs = zeros(1, length(db));
+  for i = 1:length(db)
+      avgs(i) = mean(db(i).scores);
+  end
+  [~, best_idx] = max(avgs);
+  fprintf('Top student: %s\n', db(best_idx).name);
+
+  % 4. Extract all names into cell array
+  all_names = cell(1, length(db));
+  for i = 1:length(db)
+      all_names{i} = db(i).name;
+  end
+  % all_names → {'Alice','Bob','Carol','Dave'}
+
+  % 5. Build report cell array
+  report = cell(1, length(db));
+  for i = 1:length(db)
+      report{i} = sprintf('%s: avg=%.1f, year=%d', ...
+                          db(i).name, mean(db(i).scores), db(i).year);
+  end
+  for i = 1:length(report)
+      disp(report{i});
+  end
+
+  % 6. Print field names
+  fields = fieldnames(db);
+  for i = 1:length(fields)
+      fprintf('Field: %s\n', fields{i});
+  end
+
+EXPECTED OUTPUT:
+  Alice: avg = 84.3
+  Bob:   avg = 71.7
+  Carol: avg = 91.7
+  Dave:  avg = 66.7
+  Top student: Carol
+
+  report{1} = 'Alice: avg=84.3, year=2'
+  report{2} = 'Bob: avg=71.7, year=3'
+  report{3} = 'Carol: avg=91.7, year=1'
+  report{4} = 'Dave: avg=66.7, year=2'
+
+  Field: name
+  Field: scores
+  Field: year
+
+KEY INSIGHTS:
+  - Struct arrays are indexed with () : db(i).field — round brackets for index,
+    dot for field. This is different from cell {} indexing.
+  - Pre-allocate the cell array with cell(1,n) before filling in a loop.
+  - fieldnames() returns a cell array of strings — loop with {} to access each.
+  - Building avgs as a numeric vector first lets you use max() with two outputs
+    to get the index directly — avoid a second loop.
+
+
+================================================================================
+  TOPIC 3: FILE I/O
+================================================================================
+
+KEY CONCEPTS
+------------
+- Always pair fopen with fclose — leaked file handles cause corruption.
+- fopen returns -1 on failure — always check before proceeding.
+- fgetl reads one line as a char. Returns -1 (not char) at end of file.
+- feof(fid) returns 1 when at end of file.
+- dlmwrite/dlmread for numeric CSV data. fprintf/fgetl for text/mixed data.
+- save/load for .mat files — simplest way to persist MATLAB variables.
+- Use 'a' mode in fopen to append to an existing file (not overwrite).
+
+QUICK REFERENCE
+---------------
+  % Open modes
+  fid = fopen('file.txt', 'r')   % read
+  fid = fopen('file.txt', 'w')   % write (overwrites)
+  fid = fopen('file.txt', 'a')   % append
+  if fid == -1; error('Cannot open'); end
+
+  % Write
+  fprintf(fid, 'text %d\n', value)
+
+  % Read line by line
+  while ~feof(fid)
+      line = fgetl(fid);
+      if ischar(line)
+          % process line
+      end
+  end
+
+  % Always close
+  fclose(fid)
+
+  % Numeric CSV
+  dlmwrite('out.csv', matrix, ',')
+  M = dlmread('in.csv', ',')
+
+  % .mat files
+  save('file.mat', 'varA', 'varB')
+  load('file.mat')
+
+[INTERVIEW TRAP] fgetl returns -1 (integer) at EOF, not an empty string.
+                 Always check ischar(line) before processing.
+[INTERVIEW TRAP] fopen with 'w' silently overwrites existing files.
+                 Use 'a' to append. Check file existence first if needed.
+[INTERVIEW TRAP] Always check fid ~= -1 after fopen.
+                 fprintf to fid=-1 produces cryptic errors.
+[INTERVIEW TRAP] dlmread reads ONLY numeric data. Mixed text/number CSV
+                 requires manual fgetl line-by-line parsing.
+				 
+				 
+Commonly used by me:
+-------------------
+>> iq = randn(10,1) + 1j*randn(10,1);   % example IQ data
+>> data = [real(iq), imag(iq)];
+>> dlmwrite('iq.txt', data, 'delimiter', ' ');
+>> dlmread('iq.txt');
+>> csvwrite('iq.csv', data);
+>> data = csvread('iq.csv');
+>> iq = data(:,1) + 1j*data(:,2);
+
+
+--------------------------------------------------------------------------------
+EXERCISE 3: File Read & Write Pipeline
+--------------------------------------------------------------------------------
+TASK:
+  1. Write a script that creates a file 'students.txt' with this content
+     (use fprintf with fopen 'w'):
+       Alice 84.3 2
+       Bob 71.7 3
+       Carol 91.7 1
+       Dave 66.7 2
+     Format per line: '%s %.1f %d\n'
+
+  2. Read the file back line by line using fgetl. Parse each line with
+     strsplit to extract name, average score, and year.
+     Store all data in a struct array called 'records'.
+
+  3. Print a summary of students in year 2 only.
+
+  4. Write a second file 'year2.txt' containing only year-2 students,
+     one per line, using fprintf.
+
+SOLUTION:
+----------
+  % 1. Write students.txt
+  data = {'Alice', 84.3, 2; 'Bob', 71.7, 3; 'Carol', 91.7, 1; 'Dave', 66.7, 2};
+
+  fid = fopen('students.txt', 'w');
+  if fid == -1; error('Cannot open students.txt for writing'); end
+  for i = 1:size(data, 1)
+      fprintf(fid, '%s %.1f %d\n', data{i,1}, data{i,2}, data{i,3});
+  end
+  fclose(fid);
+
+  % 2. Read back and parse into struct array
+  fid = fopen('students.txt', 'r');
+  if fid == -1; error('Cannot open students.txt for reading'); end
+  records = struct('name', {}, 'avg', {}, 'year', {});
+  idx = 0;
+  while ~feof(fid)
+      line = fgetl(fid);
+      if ~ischar(line) || isempty(strtrim(line))
+          continue;
+      end
+      parts = strsplit(strtrim(line), ' ');
+      idx = idx + 1;
+      records(idx).name = parts{1};
+      records(idx).avg  = str2double(parts{2});
+      records(idx).year = str2double(parts{3});
+  end
+  fclose(fid);
+
+  % 3. Print year-2 students
+  fprintf('Year 2 students:\n');
+  for i = 1:length(records)
+      if records(i).year == 2
+          fprintf('  %s (avg=%.1f)\n', records(i).name, records(i).avg);
+      end
+  end
+
+  % 4. Write year2.txt
+  fid = fopen('year2.txt', 'w');
+  if fid == -1; error('Cannot open year2.txt'); end
+  for i = 1:length(records)
+      if records(i).year == 2
+          fprintf(fid, '%s %.1f %d\n', ...
+                  records(i).name, records(i).avg, records(i).year);
+      end
+  end
+  fclose(fid);
+  fprintf('year2.txt written.\n');
+
+EXPECTED OUTPUT:
+  Year 2 students:
+    Alice (avg=84.3)
+    Dave (avg=66.7)
+  year2.txt written.
+
+  students.txt contents:
+    Alice 84.3 2
+    Bob 71.7 3
+    Carol 91.7 1
+    Dave 66.7 2
+
+  year2.txt contents:
+    Alice 84.3 2
+    Dave 66.7 2
+
+KEY INSIGHTS:
+  - Always check fid ~= -1 immediately after fopen.
+  - ischar(line) guards against the -1 returned at EOF.
+  - strtrim removes any leading/trailing whitespace before strsplit —
+    prevents empty strings in parts{} from blank lines.
+  - str2double converts the parsed string fields to numbers safely.
+  - The empty struct struct('name',{},'avg',{},'year',{}) initialises a
+    0-element struct array — lets the loop grow it naturally.
+
+
+================================================================================
+  TOPIC 4: PLOTTING, VECTORIZATION & ERROR HANDLING
+================================================================================
+
+KEY CONCEPTS — PLOTTING
+------------------------
+- plot(x, y) — basic line plot. Always set title, xlabel, ylabel.
+- hold on/off — required to overlay multiple lines on one figure.
+- subplot(rows, cols, pos) — divide figure into a grid of panels.
+- grid on — adds grid lines. legend() labels multiple lines.
+- Line spec string: 'r--' = red dashed, 'bo' = blue circles, 'k-.' = black dash-dot.
+- bar, hist (or histogram), scatter, stem for other chart types.
+- saveas(gcf, 'file.png') saves the current figure to a file.
+
+KEY CONCEPTS — VECTORIZATION
+------------------------------
+- Replace loops with array operations wherever possible.
+- Use .^, .*, ./ for element-wise operations on vectors.
+- arrayfun(@f, v) applies scalar function f to each element of v.
+- cellfun(@f, c) applies function f to each cell of cell array c.
+- logical indexing replaces conditional loops in most cases.
+- sum(condition) counts elements satisfying condition.
+
+KEY CONCEPTS — ERROR HANDLING
+-------------------------------
+- try / catch err — catch errors without crashing the script.
+- error('message %s', var) — throw a custom error.
+- err.message — the error text. err.identifier — the error ID string.
+- 1/0 = Inf, 0/0 = NaN — MATLAB does NOT throw on divide by zero.
+- warning() issues a non-fatal warning. warning('off','all') silences them.
+
+QUICK REFERENCE — PLOTTING
+----------------------------
+  plot(x, y)                   % line plot
+  plot(x, y, 'r--o')          % red dashed with circles
+  hold on / hold off           % overlay / stop overlaying
+  title('text')
+  xlabel('text') / ylabel('text')
+  legend('line1', 'line2')
+  grid on
+  subplot(2, 1, 1)             % 2 rows, 1 col, panel 1
+  bar(v)                       % bar chart
+  hist(v, nbins)               % histogram (Octave)
+  scatter(x, y)                % scatter plot
+  saveas(gcf, 'fig.png')       % save figure
+
+QUICK REFERENCE — ERROR HANDLING
+----------------------------------
+  try
+      risky_code;
+  catch err
+      fprintf('Error: %s\n', err.message);
+  end
+
+  error('myid:badInput', 'Value %d is invalid', x)
+  warning('myid:warn', 'This might be wrong')
+
+[INTERVIEW TRAP] Forgetting hold on overwrites the existing plot silently.
+[INTERVIEW TRAP] 1/0 → Inf  and  0/0 → NaN. No exception is thrown.
+                 Must check manually with isinf() or isnan().
+[INTERVIEW TRAP] arrayfun expects the function to return a scalar.
+                 For non-scalar output use: arrayfun(f, v, 'UniformOutput', false)
+[INTERVIEW TRAP] subplot(2,1,1) means (nrows, ncols, panel_index) — not (row, col).
+
+--------------------------------------------------------------------------------
+EXERCISE 4A: Plotting Exercise
+--------------------------------------------------------------------------------
+TASK:
+  1. Create x = linspace(0, 4*pi, 200)
+  2. In a single figure with 3 subplots (3 rows, 1 col):
+       Subplot 1: plot sin(x) — blue solid line, title 'Sine'
+       Subplot 2: plot cos(x) — red dashed line, title 'Cosine'
+       Subplot 3: plot sin(x) and cos(x) overlaid — use hold on/off,
+                  add legend, title 'Overlay'
+  3. Add xlabel 'x (radians)' and ylabel 'amplitude' to each subplot.
+  4. Turn grid on for all three subplots.
+
+SOLUTION:
+----------
+  x = linspace(0, 4*pi, 200);
+
+  figure;
+
+  subplot(3, 1, 1);
+  plot(x, sin(x), 'b-');
+  title('Sine');
+  xlabel('x (radians)'); ylabel('amplitude');
+  grid on;
+
+  subplot(3, 1, 2);
+  plot(x, cos(x), 'r--');
+  title('Cosine');
+  xlabel('x (radians)'); ylabel('amplitude');
+  grid on;
+
+  subplot(3, 1, 3);
+  hold on;
+  plot(x, sin(x), 'b-');
+  plot(x, cos(x), 'r--');
+  hold off;
+  title('Overlay');
+  xlabel('x (radians)'); ylabel('amplitude');
+  legend('sin', 'cos');
+  grid on;
+
+KEY INSIGHTS:
+  - subplot() must be called before each plot() to switch the active panel.
+  - hold on must come BEFORE the second plot() call, not after.
+  - figure; opens a fresh figure window — good practice to avoid drawing
+    on a previous figure accidentally.
+  - All formatting (title, xlabel, grid) applies to the currently active subplot.
+
+--------------------------------------------------------------------------------
+EXERCISE 4B: Vectorization & Error Handling
+--------------------------------------------------------------------------------
+TASK:
+  1. Without using a loop, compute for x = 1:20:
+       f(x) = x^3 - 6*x^2 + 11*x - 6
+     Store results in vector y. Find all x where f(x) == 0.
+
+  2. Write a function safe_divide(a, b) that:
+       - Throws a custom error if b is zero (using error()).
+       - Returns a ./ b otherwise (element-wise, supports vectors).
+     Wrap a call to safe_divide in try/catch and print the error message
+     if b contains any zero.
+
+  3. Write a vectorized one-liner (no loop) that, given:
+       v = [3 -1 4 -1 5 -9 2 -6]
+     replaces all negative values with their absolute value.
+     (i.e. equivalent to abs(v) — but write it using logical indexing)
+
+SOLUTION:
+----------
+  % 1. Vectorized polynomial
+  x = 1:20;
+  y = x.^3 - 6.*x.^2 + 11.*x - 6;
+  roots_x = x(y == 0);
+  fprintf('Roots at x = '); disp(roots_x);
+  % Roots at x = [1 2 3]  (since f=(x-1)(x-2)(x-3))
+
+  % 2. safe_divide with error handling
+  function result = safe_divide(a, b)
+      if any(b == 0)
+          error('safe_divide:zeroDivisor', ...
+                'Divisor contains zero — division undefined');
+      end
+      result = a ./ b;
+  end
+
+  try
+      r = safe_divide([10 20 30], [2 0 5]);
+  catch err
+      fprintf('Caught: %s\n', err.message);
+  end
+  % Output: Caught: Divisor contains zero — division undefined
+
+  % Safe call
+  r = safe_divide([10 20 30], [2 4 5]);
+  disp(r)   % → [5 5 6]
+
+  % 3. Replace negatives with abs — logical indexing one-liner
+  v = [3 -1 4 -1 5 -9 2 -6];
+  v(v < 0) = -v(v < 0);
+  % → [3 1 4 1 5 9 2 6]
+  % Or equivalently (and more clearly): v = abs(v)
+
+EXPECTED OUTPUT:
+  Roots at x =  1  2  3
+  Caught: Divisor contains zero — division undefined
+  r (safe) = [5  5  6]
+  v        = [3  1  4  1  5  9  2  6]
+
+KEY INSIGHTS:
+  - x.^3 - 6.*x.^2 + 11.*x - 6 applies the polynomial to all 20 elements
+    simultaneously. All operators need dots for element-wise on vectors.
+  - x(y == 0) uses logical indexing to find roots — clean and no loop needed.
+  - any(b == 0) checks the entire vector b at once in the guard clause.
+  - error('id:subid', 'message') — the identifier format is 'package:reason'.
+  - v(v < 0) = -v(v < 0) negates only the negative elements in place.
+    This is idiomatic; abs(v) is cleaner but the indexing version shows mastery.
+
+
+================================================================================
+  PHASE 3 — COMBINED PRACTICE EXERCISE
+================================================================================
+
+TASK: The Full Pipeline
+  Build a complete script that touches all Phase 3 topics:
+
+  1. Create a struct array of 3 products:
+       name (string), price (number), category (string)
+       Data: 'Laptop',999.99,'Electronics'
+             'Desk',249.50,'Furniture'
+             'Headphones',79.99,'Electronics'
+
+  2. Write the data to 'products.txt' using fprintf
+     (format: 'name,price,category\n').
+
+  3. Read it back line by line, parse with strsplit, rebuild the struct array.
+
+  4. Using vectorization (no loop), extract all prices into a numeric vector.
+     Find the mean, max, and min price.
+
+  5. Using a cell array, build a list of formatted strings:
+       'Laptop: $999.99 (Electronics)'
+
+  6. Wrap the entire file read in try/catch. If the file cannot be opened,
+     print a friendly error message and use hardcoded defaults instead.
+
+  7. Plot a bar chart of prices with product names as labels.
+
+SOLUTION:
+----------
+  % 1. Struct array
+  products(1).name = 'Laptop';     products(1).price = 999.99; products(1).category = 'Electronics';
+  products(2).name = 'Desk';       products(2).price = 249.50; products(2).category = 'Furniture';
+  products(3).name = 'Headphones'; products(3).price = 79.99;  products(3).category = 'Electronics';
+
+  % 2. Write to file
+  fid = fopen('products.txt', 'w');
+  if fid == -1; error('Cannot write products.txt'); end
+  for i = 1:length(products)
+      fprintf(fid, '%s,%.2f,%s\n', products(i).name, products(i).price, products(i).category);
+  end
+  fclose(fid);
+
+  % 3. Read back
+  try
+      fid = fopen('products.txt', 'r');
+      if fid == -1; error('File not found'); end
+      loaded = struct('name',{},'price',{},'category',{});
+      idx = 0;
+      while ~feof(fid)
+          line = fgetl(fid);
+          if ~ischar(line) || isempty(strtrim(line)); continue; end
+          parts = strsplit(strtrim(line), ',');
+          idx = idx + 1;
+          loaded(idx).name     = parts{1};
+          loaded(idx).price    = str2double(parts{2});
+          loaded(idx).category = parts{3};
+      end
+      fclose(fid);
+  catch err
+      fprintf('File error: %s — using defaults.\n', err.message);
+      loaded = products;   % fallback to hardcoded
+  end
+
+  % 4. Prices vector — build in loop then use vectorized ops
+  prices = zeros(1, length(loaded));
+  for i = 1:length(loaded)
+      prices(i) = loaded(i).price;
+  end
+  fprintf('Mean: $%.2f  Max: $%.2f  Min: $%.2f\n', mean(prices), max(prices), min(prices));
+
+  % 5. Formatted cell array
+  summary = cell(1, length(loaded));
+  for i = 1:length(loaded)
+      summary{i} = sprintf('%s: $%.2f (%s)', loaded(i).name, loaded(i).price, loaded(i).category);
+  end
+  for i = 1:numel(summary); disp(summary{i}); end
+
+  % 7. Bar chart
+  names = cellfun(@(s) strsplit(s,':'), summary, 'UniformOutput', false);
+  figure;
+  bar(prices);
+  title('Product Prices');
+  ylabel('Price ($)');
+  set(gca, 'XTickLabel', {loaded.name});
+  grid on;
+
+EXPECTED OUTPUT:
+  Mean: $443.16  Max: $999.99  Min: $79.99
+  Laptop: $999.99 (Electronics)
+  Desk: $249.50 (Furniture)
+  Headphones: $79.99 (Electronics)
+
+
+================================================================================
+  PHASE 3 INTERVIEW CHEAT SHEET — ALL TRAPS IN ONE PLACE
+================================================================================
+
+STRINGS
+--------
+  - NEVER use == for string comparison. Use strcmp() or strcmpi().
+  - strcat trims trailing spaces from char arrays. Use [] for safe concat.
+  - str2double is safe. str2num uses eval — avoid it.
+  - sprintf returns a string. fprintf prints and returns nothing useful.
+  - strsplit returns a cell array. Access with {}.
+  - char indexing is 1-based: s(1) is first char, s(end) is last.
+
+CELL ARRAYS
+------------
+  - c(i) → cell container. c{i} → actual content. Always use {} for content.
+  - cellfun with non-scalar output needs 'UniformOutput', false.
+  - Cell arrays grow dynamically but pre-allocate with cell(1,n) when possible.
+
+STRUCTS
+--------
+  - Dynamic field access: s.(varname) not s.varname when name is in a variable.
+  - rmfield returns a modified copy — it does NOT modify in place.
+  - fieldnames() returns a cell array of strings.
+  - Struct array indexing: arr(i).field — round brackets for index, dot for field.
+
+FILE I/O
+---------
+  - Always check fid ~= -1 after fopen.
+  - Always fclose — pair it with every fopen.
+  - fgetl returns -1 at EOF (not a char). Check ischar(line).
+  - 'w' overwrites silently. Use 'a' to append.
+  - dlmread reads numeric only. Use fgetl loop for mixed text/number CSV.
+
+PLOTTING
+---------
+  - hold on before second plot(), not after.
+  - subplot(rows, cols, index) — index counts left-to-right, top-to-bottom.
+  - All formatting (title, xlabel, legend) applies to the currently active subplot.
+  - figure; opens a new window. Without it, plots overwrite each other.
+
+ERROR HANDLING
+---------------
+  - 1/0 = Inf, 0/0 = NaN — no exception. Check with isinf()/isnan().
+  - try/catch err — err.message for text, err.identifier for ID.
+  - error('pkg:id', 'msg %d', val) — always include a message format.
+  - arrayfun non-scalar output needs 'UniformOutput', false.
+
+================================================================================
+  END OF PHASE 3 REVISION GUIDE
+  Good luck with your interview!
+================================================================================

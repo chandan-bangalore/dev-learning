@@ -1,0 +1,598 @@
+================================================================================
+  MATLAB / OCTAVE — PHASE 2 REVISION GUIDE
+  Control Flow, Loops, Functions & Anonymous Functions
+  All exercises, solutions, and key interview notes
+================================================================================
+
+HOW TO USE THIS FILE
+--------------------
+- Read each exercise, attempt it in Octave, then check the solution.
+- Sections marked [INTERVIEW TRAP] are frequently tested — memorise these.
+- Run every code block yourself. Reading is not the same as doing.
+
+================================================================================
+  TOPIC 1: if / elseif / else / switch
+================================================================================
+
+KEY CONCEPTS
+------------
+- Every if block must be closed with 'end'.
+- Use && and || (short-circuit) in if conditions — not & and |.
+- elseif is one word (not else if with a space — that creates a nested block).
+- switch works on both numbers and strings. Use cell array for multiple values
+  in one case: case {'Sat','Sun'}
+- Conditions in if must evaluate to a scalar logical. Non-scalar inputs with &
+  can cause unexpected behaviour.
+
+QUICK REFERENCE
+---------------
+  if condition
+      ...
+  elseif condition
+      ...
+  else
+      ...
+  end
+
+  switch var
+      case value1
+          ...
+      case {value2, value3}    % multiple matches
+          ...
+      otherwise
+          ...
+  end
+
+[INTERVIEW TRAP] Use && not & in if conditions.
+                 & evaluates both sides always and errors on non-scalars.
+[INTERVIEW TRAP] elseif (one word). else if (two words) creates a nested block
+                 that needs its own end — a subtle and painful bug.
+[INTERVIEW TRAP] switch in MATLAB does NOT fall through between cases (unlike C).
+                 Each case is independent — no need for break.
+
+--------------------------------------------------------------------------------
+EXERCISE 1: BMI Classifier
+--------------------------------------------------------------------------------
+TASK:
+  Given weight_kg = 85 and height_m = 1.75:
+  1. Compute BMI = weight / height^2
+  2. Print BMI rounded to 1 decimal place using fprintf
+  3. Classify using if/elseif/else:
+       BMI < 18.5           → 'Underweight'
+       18.5 <= BMI < 25     → 'Normal'
+       25   <= BMI < 30     → 'Overweight'
+       BMI >= 30            → 'Obese'
+  4. Then rewrite the day-of-week classifier using switch:
+     'Mon'           → 'Start of week'
+     'Sat' or 'Sun'  → 'Weekend'
+     anything else   → 'Weekday'
+
+SOLUTION:
+----------
+  % Part 1 — BMI classifier
+  weight_kg = 85;
+  height_m  = 1.75;
+  bmi = weight_kg / height_m^2;
+  fprintf('BMI: %.1f\n', bmi);
+
+  if bmi < 18.5
+      category = 'Underweight';
+  elseif bmi < 25
+      category = 'Normal';
+  elseif bmi < 30
+      category = 'Overweight';
+  else
+      category = 'Obese';
+  end
+  disp(category)
+
+  % Part 2 — switch classifier
+  day = 'Mon';
+  switch day
+      case 'Mon'
+          disp('Start of week');
+      case {'Sat', 'Sun'}
+          disp('Weekend');
+      otherwise
+          disp('Weekday');
+  end
+
+EXPECTED OUTPUT:
+  BMI: 27.8
+  Overweight
+  Start of week
+
+KEY INSIGHTS:
+  - height_m^2 works fine for a scalar. Use .^ for vectors.
+  - In the elseif chain, once bmi < 18.5 fails, we know bmi >= 18.5
+    so the next elseif only needs bmi < 25 — no need to repeat >= 18.5.
+  - switch case {'Sat','Sun'} matches either value — cleaner than two cases.
+  - fprintf('%.1f', x) formats to 1 decimal place. \n adds a newline.
+
+--------------------------------------------------------------------------------
+EXERCISE 1B: Extended — Temperature & Season Classifier
+--------------------------------------------------------------------------------
+TASK:
+  Write a script that takes a month number (1-12) and temperature (Celsius):
+  1. Use switch to determine the season:
+       Dec, Jan, Feb (12,1,2) → 'Winter'
+       Mar, Apr, May  (3,4,5) → 'Spring'
+       Jun, Jul, Aug  (6,7,8) → 'Summer'
+       Sep, Oct, Nov (9,10,11)→ 'Autumn'
+  2. Use if/elseif to classify the temperature:
+       temp < 0   → 'Freezing'
+       0-15       → 'Cold'
+       15-25      → 'Mild'
+       > 25       → 'Hot'
+  3. Print both results with fprintf.
+
+  Test values: month = 7, temp = 28
+
+SOLUTION:
+----------
+  month = 7;
+  temp  = 28;
+
+  switch month
+      case {12, 1, 2}
+          season = 'Winter';
+      case {3, 4, 5}
+          season = 'Spring';
+      case {6, 7, 8}
+          season = 'Summer';
+      case {9, 10, 11}
+          season = 'Autumn';
+  end
+
+  if temp < 0
+      feel = 'Freezing';
+  elseif temp <= 15
+      feel = 'Cold';
+  elseif temp <= 25
+      feel = 'Mild';
+  else
+      feel = 'Hot';
+  end
+
+  fprintf('Season: %s | Temperature feel: %s\n', season, feel);
+
+EXPECTED OUTPUT:
+  Season: Summer | Temperature feel: Hot
+
+
+================================================================================
+  TOPIC 2: for & while LOOPS
+================================================================================
+
+KEY CONCEPTS
+------------
+- for loops iterate over a range (1:n) or directly over a vector.
+- while loops run until a condition becomes false.
+- break exits the loop immediately.
+- continue skips the rest of the current iteration and goes to next.
+- ALWAYS pre-allocate arrays before filling them in a loop.
+- When possible, replace loops with vectorized operations — faster and cleaner.
+
+QUICK REFERENCE
+---------------
+  % for over range
+  for i = 1:n
+      ...
+  end
+
+  % for over vector
+  for val = v
+      ...
+  end
+
+  % while
+  while condition
+      ...
+  end
+
+  % break and continue
+  if condition; break; end
+  if condition; continue; end
+
+  % Pre-allocate pattern (always do this)
+  result = zeros(1, n);
+  for i = 1:n
+      result(i) = some_computation(i);
+  end
+
+VECTORIZATION EQUIVALENTS
+--------------------------
+  % Instead of looping to sum:        use sum(v)
+  % Instead of looping to square:     use v .^ 2
+  % Instead of looping to filter:     use v(v > threshold)
+  % Instead of looping to find:       use find(condition)
+  % Instead of looping to apply fn:   use arrayfun(@fn, v)
+
+[INTERVIEW TRAP] Growing arrays in loops (v(end+1)=x) is O(n^2) slow.
+                 Always pre-allocate: v = zeros(1,n) then v(i) = x.
+[INTERVIEW TRAP] for val = matrix iterates over COLUMNS, not rows.
+                 A 3x4 matrix gives 4 iterations, each val is a 3x1 column.
+[INTERVIEW TRAP] Modifying the loop variable i inside the loop does nothing —
+                 MATLAB resets it to the next value on each iteration.
+[INTERVIEW TRAP] An empty range (e.g. for i = 5:1) executes zero times silently.
+
+--------------------------------------------------------------------------------
+EXERCISE 2: Fibonacci & Loop Patterns
+--------------------------------------------------------------------------------
+TASK:
+  Part A — for loop:
+    1. Compute the first 10 Fibonacci numbers using a pre-allocated array.
+       (fib(1)=1, fib(2)=1, each subsequent = sum of previous two)
+    2. Use a for loop (no recursion).
+
+  Part B — while loop:
+    3. Find the first Fibonacci number greater than 100.
+       Use a while loop with two running variables (no array needed).
+
+  Part C — break & continue:
+    4. Sum only the odd numbers from 1 to 100 using continue to skip evens.
+    5. Find the first number from 1:1000 where n^3 > 5000 using break.
+
+SOLUTION:
+----------
+  % Part A — Fibonacci array
+  n = 10;
+  fib = zeros(1, n);
+  fib(1) = 1;
+  fib(2) = 1;
+  for i = 3:n
+      fib(i) = fib(i-1) + fib(i-2);
+  end
+  % fib → [1 1 2 3 5 8 13 21 34 55]
+
+  % Part B — first Fibonacci > 100
+  a = 1; b = 1;
+  while b <= 100
+      temp = b;
+      b    = a + b;
+      a    = temp;
+  end
+  % b → 144
+
+  % Part C — continue to skip evens
+  total = 0;
+  for i = 1:100
+      if mod(i, 2) == 0
+          continue;
+      end
+      total = total + i;
+  end
+  % total → 2500
+
+  % Part C — break on condition
+  for n = 1:1000
+      if n^3 > 5000
+          break;
+      end
+  end
+  % n → 18  (18^3 = 5832 > 5000)
+
+EXPECTED OUTPUT:
+  fib    = [1 1 2 3 5 8 13 21 34 55]
+  b      = 144
+  total  = 2500
+  n      = 18
+
+KEY INSIGHTS:
+  - Pre-allocate fib = zeros(1,n) before the loop — no resizing needed.
+  - The while Fibonacci uses only 3 variables — no array. Efficient for
+    "find the first X" problems where you don't need to store the sequence.
+  - continue skips back to the loop counter — total stays unchanged for evens.
+  - After break, the loop variable i/n holds the value that triggered the break.
+    This is the standard pattern for "find first element satisfying condition."
+
+--------------------------------------------------------------------------------
+EXERCISE 2B: Extended — Matrix Operations with Loops
+--------------------------------------------------------------------------------
+TASK:
+  Given A = magic(4) (a 4x4 magic square):
+  1. Use a for loop to print the sum of each row (without sum(A,2)).
+  2. Use a nested for loop to count how many elements are greater than 8.
+  3. Use a while loop to repeatedly halve a value starting at 1000
+     until it falls below 1. Count the iterations.
+
+SOLUTION:
+----------
+  A = magic(4);
+
+  % Part 1 — row sums
+  for i = 1:size(A,1)
+      fprintf('Row %d sum: %d\n', i, sum(A(i,:)));
+  end
+
+  % Part 2 — count elements > 8
+  count = 0;
+  for i = 1:size(A,1)
+      for j = 1:size(A,2)
+          if A(i,j) > 8
+              count = count + 1;
+          end
+      end
+  end
+  fprintf('Elements > 8: %d\n', count);
+  % Vectorized equivalent: sum(A(:) > 8)
+
+  % Part 3 — halving while loop
+  val  = 1000;
+  iters = 0;
+  while val >= 1
+      val   = val / 2;
+      iters = iters + 1;
+  end
+  fprintf('Iterations: %d, final val: %.4f\n', iters, val);
+
+EXPECTED OUTPUT:
+  Row 1 sum: 34  (all rows of magic square sum to same value)
+  Elements > 8: 8
+  Iterations: 10, final val: 0.9766
+
+
+================================================================================
+  TOPIC 3: FUNCTIONS & ANONYMOUS FUNCTIONS
+================================================================================
+
+KEY CONCEPTS
+------------
+- Each named function lives in its own .m file with the same name.
+- In Octave, functions can also be defined at the bottom of a script.
+- Multiple return values: function [a, b, c] = my_func(x)
+- nargin = number of arguments actually passed by caller (for optional args).
+- nargout = number of output arguments requested by caller.
+- Anonymous functions: f = @(x) expression — inline, no file needed.
+- Anonymous functions capture workspace variables at the moment of creation.
+
+QUICK REFERENCE
+---------------
+  % Named function (my_func.m)
+  function [out1, out2] = my_func(in1, in2)
+      out1 = ...;
+      out2 = ...;
+  end
+
+  % Call with all outputs
+  [a, b] = my_func(x, y);
+
+  % Discard some outputs
+  [~, b] = my_func(x, y);
+
+  % Optional argument with nargin
+  function result = my_func(x, n)
+      if nargin < 2
+          n = 2;          % default value
+      end
+      result = x .^ n;
+  end
+
+  % Anonymous function
+  f    = @(x) x.^2;
+  add  = @(a,b) a + b;
+  comp = @(x) f(g(x));   % function composition
+
+  % Apply to array
+  arrayfun(@(x) x^2, [1 2 3])   % → [1 4 9]
+
+[INTERVIEW TRAP] Function filename must exactly match function name.
+                 my_func.m must contain: function ... = my_func(...)
+[INTERVIEW TRAP] nargin gives number of INPUT args passed.
+                 nargout gives number of OUTPUT args requested.
+                 Both only work INSIDE a function body.
+[INTERVIEW TRAP] Anonymous functions capture the VALUE of variables at creation.
+                 If you change 'threshold' after defining the anon function,
+                 the function still uses the old value.
+[INTERVIEW TRAP] return in a function exits immediately — like break for functions.
+                 Useful for early exit (guard clauses).
+
+--------------------------------------------------------------------------------
+EXERCISE 3: is_prime Function
+--------------------------------------------------------------------------------
+TASK:
+  Part A:
+    Write a function is_prime(n) that returns true if n is prime.
+    Rules: n < 2 is not prime. Only check divisors up to sqrt(n).
+    Do NOT use MATLAB's built-in isprime().
+
+  Part B:
+    Use is_prime in a loop to collect all primes up to 50 into a vector.
+
+  Part C:
+    Write an anonymous function that squares and then adds 1: f(x) = x^2 + 1
+    Test it on a vector [1 2 3 4 5].
+
+SOLUTION:
+----------
+  % Part A — save as is_prime.m
+  function result = is_prime(n)
+      if n < 2
+          result = false;
+          return;
+      end
+      for i = 2:floor(sqrt(n))
+          if mod(n, i) == 0
+              result = false;
+              return;
+          end
+      end
+      result = true;
+  end
+
+  % Part B — all primes up to 50
+  primes_list = zeros(1, 15);  % rough pre-alloc
+  count = 0;
+  for k = 2:50
+      if is_prime(k)
+          count = count + 1;
+          primes_list(count) = k;
+      end
+  end
+  primes_list = primes_list(1:count);  % trim unused zeros
+  % → [2 3 5 7 11 13 17 19 23 29 31 37 41 43 47]
+
+  % Part C — anonymous function
+  f = @(x) x.^2 + 1;
+  f([1 2 3 4 5])   % → [2 5 10 17 26]
+
+EXPECTED OUTPUT:
+  primes_list = [2 3 5 7 11 13 17 19 23 29 31 37 41 43 47]
+  ans         = [2 5 10 17 26]
+
+KEY INSIGHTS:
+  - Only check divisors up to floor(sqrt(n)) — any factor above sqrt(n)
+    must be paired with one below it, so we don't need to go further.
+  - return exits the function immediately — used here as an early exit / guard.
+  - The .^ in the anonymous function makes it work on both scalars and vectors.
+  - Trimming with primes_list(1:count) removes unused pre-allocated zeros.
+
+--------------------------------------------------------------------------------
+EXERCISE 3B: Extended — Multi-output Function with nargin
+--------------------------------------------------------------------------------
+TASK:
+  Write a function: describe_vector(v, label)
+    - 'label' is optional. If not provided, use 'Vector' as default.
+    - Returns three outputs: [mn, mx, avg]
+    - Also prints a formatted summary line using fprintf:
+        "<label>: min=X, max=Y, mean=Z"
+      where X, Y, Z are rounded to 2 decimal places.
+
+  Test with:
+    [a,b,c] = describe_vector([4 7 2 9 1 5])
+    [a,b,c] = describe_vector([4 7 2 9 1 5], 'Scores')
+
+SOLUTION:
+----------
+  function [mn, mx, avg] = describe_vector(v, label)
+      if nargin < 2
+          label = 'Vector';
+      end
+      mn  = min(v);
+      mx  = max(v);
+      avg = mean(v);
+      fprintf('%s: min=%.2f, max=%.2f, mean=%.2f\n', label, mn, mx, avg);
+  end
+
+  % Calls:
+  [a,b,c] = describe_vector([4 7 2 9 1 5]);
+  [a,b,c] = describe_vector([4 7 2 9 1 5], 'Scores');
+
+EXPECTED OUTPUT:
+  Vector: min=1.00, max=9.00, mean=4.67
+  Scores: min=1.00, max=9.00, mean=4.67
+
+KEY INSIGHTS:
+  - nargin < 2 detects that the optional argument was not supplied.
+  - The function returns 3 values — caller can capture all, some, or none.
+  - [~, ~, avg] = describe_vector(v) captures only the third output.
+  - fprintf %s for strings, %d for integers, %.2f for 2-decimal floats.
+
+
+================================================================================
+  PHASE 2 — COMBINED PRACTICE EXERCISE
+================================================================================
+
+TASK: The Number Analyser
+  Write a complete script that:
+  1. Defines a function is_even(n) → true if n is even.
+  2. Uses a for loop with if/else to classify numbers 1-20 as
+     'even prime', 'odd prime', 'even', or 'odd'. Store results in a
+     cell array (or just print with fprintf).
+  3. Uses a while loop to find the smallest n such that sum(1:n) > 500.
+  4. Defines an anonymous function: f = @(x) 3*x.^2 - 2*x + 1
+     Evaluates it on linspace(0, 5, 6) and prints the results.
+
+SOLUTION:
+----------
+  % 1. is_even function (save as is_even.m or define in Octave script)
+  function result = is_even(n)
+      result = mod(n, 2) == 0;
+  end
+
+  % 2. Classify 1-20
+  for k = 1:20
+      even = is_even(k);
+      prime = is_prime(k);      % uses is_prime from Exercise 3
+      if even && prime
+          label = 'even prime';
+      elseif ~even && prime
+          label = 'odd prime';
+      elseif even
+          label = 'even';
+      else
+          label = 'odd';
+      end
+      fprintf('%2d: %s\n', k, label);
+  end
+
+  % 3. Smallest n where sum(1:n) > 500
+  n = 1;
+  while sum(1:n) <= 500
+      n = n + 1;
+  end
+  fprintf('Smallest n: %d (sum = %d)\n', n, sum(1:n));
+
+  % 4. Anonymous function evaluation
+  f = @(x) 3*x.^2 - 2*x + 1;
+  x = linspace(0, 5, 6);
+  fprintf('x values:   '); disp(x);
+  fprintf('f(x) values:'); disp(f(x));
+
+EXPECTED OUTPUT (partial):
+   1: odd
+   2: even prime
+   3: odd prime
+   4: even
+   5: odd prime
+   6: even
+  ...
+  Smallest n: 32 (sum = 528)
+  x values:    0  1  2  3  4  5
+  f(x) values: 1  2  9  22 41 66
+
+
+================================================================================
+  PHASE 2 INTERVIEW CHEAT SHEET — ALL TRAPS IN ONE PLACE
+================================================================================
+
+if / elseif / switch
+---------------------
+  - Always && and ||  in if conditions (not & and |).
+  - elseif is ONE word. Two words creates a nested block needing extra end.
+  - switch does not fall through. No break needed between cases.
+  - case {'a','b'} matches multiple values in one case block.
+
+LOOPS
+------
+  - Pre-allocate arrays before loops: v = zeros(1,n). Never grow with v(end+1).
+  - for val = matrix iterates over columns, not rows.
+  - Modifying loop variable i inside loop has no effect — MATLAB resets it.
+  - After break, loop variable holds the value that triggered it.
+  - Empty range (5:1) runs zero times silently — watch for off-by-one in ranges.
+  - Vectorize wherever possible — sum(), find(), logical indexing beat loops.
+
+FUNCTIONS
+----------
+  - Function name must match filename exactly: my_func → my_func.m
+  - nargin → inputs passed. nargout → outputs requested. Only valid inside fn.
+  - return exits function immediately (early exit / guard clause pattern).
+  - ~ discards unwanted outputs: [~, idx] = max(v)
+  - Anonymous functions capture variable VALUES at creation time.
+  - nargin is how MATLAB handles optional/default arguments (no default= syntax).
+  - Use .^ and .* inside anonymous functions to support vector inputs.
+
+fprintf FORMAT STRINGS
+-----------------------
+  %d    integer
+  %f    float (default 6 decimals)
+  %.2f  float rounded to 2 decimals
+  %s    string
+  %e    scientific notation
+  \n    newline
+  \t    tab
+
+================================================================================
+  END OF PHASE 2 REVISION GUIDE
+  Good luck with your interview!
+================================================================================

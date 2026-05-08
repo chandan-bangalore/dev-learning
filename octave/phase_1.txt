@@ -1,0 +1,511 @@
+================================================================================
+  MATLAB / OCTAVE — PHASE 1 REVISION GUIDE
+  All exercises, solutions, and key interview notes
+================================================================================
+
+HOW TO USE THIS FILE
+--------------------
+- Read the exercise first, close the solution, and try it in Octave.
+- Only open the solution after a genuine attempt.
+- Pay special attention to sections marked [INTERVIEW TRAP] — these come up.
+
+================================================================================
+  TOPIC 1: VARIABLES & DATA TYPES
+================================================================================
+
+KEY CONCEPTS
+------------
+- Every literal number (e.g. 5, 3.14) is type 'double' by default.
+- Semicolons suppress console output. Missing them inside loops = thousands of lines.
+- NaN is NOT equal to itself. Always use isnan() to check.
+- int32() uses banker's rounding (round-half-to-even), not always round-up.
+- whos  lists all variables with name, size, bytes, and class.
+
+QUICK REFERENCE
+---------------
+  class(x)          % returns type as string: 'double', 'char', 'logical', etc.
+  whos              % full workspace snapshot
+  int32(x)          % convert to 32-bit integer (rounds!)
+  double(x)         % convert to double
+  char(65)          % ASCII → 'A'
+  logical(5)        % any nonzero → true
+
+SPECIAL VALUES
+--------------
+  Inf               % 1/0
+  -Inf              % -1/0
+  NaN               % 0/0  — not equal to anything including itself
+  pi                % 3.14159...
+  eps               % ~2.2e-16, smallest double
+  isnan(x)          % correct way to check NaN
+  isinf(x)          % check Inf
+  isfinite(x)       % check finite
+
+[INTERVIEW TRAP] NaN == NaN  returns 0 (false). Use isnan().
+[INTERVIEW TRAP] int32(2.5) → 2, int32(3.5) → 4  (banker's rounding).
+[INTERVIEW TRAP] class(NaN) → 'double'  (NaN is not a separate type).
+
+--------------------------------------------------------------------------------
+EXERCISE 1: The Variable Inspector
+--------------------------------------------------------------------------------
+TASK:
+  1. Create variable 'temperature' = 98.6
+  2. Create variable 'city' = 'Boston'
+  3. Create 'is_fever' = true if temperature > 100, else false (use expression)
+  4. Create 'temp_int' = temperature converted to int32
+  5. Create 'mystery' = 0/0
+  6. Print class() of each variable
+  7. Check if mystery is valid using the correct function
+  8. Run whos at the end
+
+BONUS: What will temp_int be — 98 or 99? Reason through banker's rounding first.
+
+SOLUTION:
+----------
+  temperature = 98.6;
+  city        = 'Boston';
+  is_fever    = temperature > 100;     % logical expression, not hardcoded
+  temp_int    = int32(temperature);
+  mystery     = 0/0;
+
+  disp(class(temperature))   % double
+  disp(class(city))          % char
+  disp(class(is_fever))      % logical
+  disp(class(temp_int))      % int32
+  disp(class(mystery))       % double  ← NaN is still a double!
+
+  isnan(mystery)             % → 1 (true)
+
+  whos
+
+EXPECTED OUTPUT:
+  double / char / logical / int32 / double
+  ans = 1
+
+  Name          Size    Bytes  Class
+  city          1x6        12  char
+  is_fever      1x1         1  logical
+  mystery       1x1         8  double
+  temp_int      1x1         4  int32
+  temperature   1x1         8  double
+
+BONUS ANSWER:
+  temp_int = 99. The decimal part is 0.6 (above 0.5), so normal rounding applies.
+  Banker's rounding only kicks in exactly at 0.5 (e.g. int32(98.5) → 98).
+
+KEY INSIGHTS:
+  - is_fever is type 'logical' (1 byte), not 'double' (8 bytes). Verify in whos.
+  - class(mystery) = 'double', not 'NaN'. NaN lives inside the double type.
+  - is_fever should always be derived from a condition, never hardcoded.
+
+
+================================================================================
+  TOPIC 2: VECTORS & MATRICES
+================================================================================
+
+KEY CONCEPTS
+------------
+- Everything in MATLAB is a matrix. A scalar is 1×1. A vector is 1×n or n×1.
+- Space or comma separates elements in a row. Semicolon separates rows.
+- * is matrix multiply. .* is element-wise multiply. The dot is critical.
+- MATLAB is 1-based indexed (first element is index 1, not 0).
+- MATLAB fills matrices column-by-column (column-major order).
+
+QUICK REFERENCE — CREATION
+---------------------------
+  [1 2 3]           % row vector  1×3
+  [1;2;3]           % col vector  3×1
+  [1 2;3 4]         % matrix      2×2
+  1:5               % [1 2 3 4 5]
+  0:2:10            % [0 2 4 6 8 10]
+  linspace(0,1,5)   % [0 0.25 0.5 0.75 1]
+  zeros(3,4)        % 3×4 zeros
+  ones(2,3)         % 2×3 ones
+  eye(4)            % 4×4 identity
+  rand(3)           % 3×3 random uniform
+  randn(3)          % 3×3 random normal
+
+QUICK REFERENCE — SIZE & SHAPE
+-------------------------------
+  size(A)           % [rows cols]
+  size(A,1)         % rows only
+  size(A,2)         % cols only
+  numel(A)          % total elements
+  length(A)         % LARGEST dimension — use carefully!
+  reshape(A,3,2)    % reshape (column-major fill)
+  A(:)              % flatten to column vector (column-major)
+  [A;B]             % vertical concat
+  [A,B]             % horizontal concat
+
+QUICK REFERENCE — OPERATORS
+----------------------------
+  A + B, A - B      % element-wise always
+  A * B             % matrix multiply
+  A .* B            % element-wise multiply  ← use this for arrays
+  A ./ B            % element-wise divide
+  A .^ 2            % element-wise power
+  A ^ 2             % matrix power (A*A)
+  A'                % conjugate transpose
+  A.'               % plain transpose (no conjugation)
+  inv(A)            % matrix inverse
+  A \ b             % solve Ax=b (better than inv)
+
+QUICK REFERENCE — USEFUL FUNCTIONS
+------------------------------------
+  sum(v)            % sum of elements
+  sum(A,1)          % sum each column → 1 value per col
+  sum(A,2)          % sum each row   → 1 value per row
+  mean(v)           % average
+  min(v), max(v)    % scalar min/max
+  [mn,idx]=min(v)   % value AND index
+  sort(v)           % ascending sort
+  sort(v,'descend') % descending sort
+  find(v>4)         % indices where condition is true
+  unique(v)         % unique values sorted
+  cumsum(v)         % cumulative sum
+
+[INTERVIEW TRAP] A * B  vs  A .* B  — forgetting the dot is the #1 MATLAB bug.
+[INTERVIEW TRAP] length(A) returns the LARGEST dimension, not number of rows.
+[INTERVIEW TRAP] A(:) flattens column-by-column, not row-by-row.
+
+--------------------------------------------------------------------------------
+EXERCISE 2: The Matrix Analyst
+--------------------------------------------------------------------------------
+DATA:
+  Sales = [120  85 200 150;
+            95 110 130 180;
+           200 160  90 210;
+            75  95 115 100];
+  (4 salespeople × 4 quarters)
+
+TASK (no hardcoded numbers — use size, end, colon, built-ins):
+  1. Print number of rows and cols separately
+  2. Extract Q3 sales (col 3) → vector q3
+  3. Extract salesperson 3 record (row 3) → vector sp3
+  4. Total sales per salesperson (sum each row) → column vector totals
+  5. Average sales per quarter (mean each col) → row vector avg_per_q
+  6. Index of salesperson with highest total → best_sp
+  7. Replace all sales below 100 with 100 → Sales_floored
+  8. Normalize by overall max → Sales_norm (all values in [0,1])
+
+BONUS: Extract bottom-right 2×2 submatrix using end (no hardcoded indices).
+
+SOLUTION:
+----------
+  Sales = [120 85 200 150; 95 110 130 180; 200 160 90 210; 75 95 115 100];
+
+  [nrows, ncols] = size(Sales);
+  fprintf('Rows: %d, Cols: %d\n', nrows, ncols);
+
+  q3       = Sales(:, 3);
+  sp3      = Sales(3, :);
+  totals   = sum(Sales, 2);
+  avg_per_q = mean(Sales, 1);
+
+  [max_val, best_sp] = max(totals);
+  fprintf('Top salesperson: row %d with total %d\n', best_sp, max_val);
+
+  Sales_floored = Sales;
+  Sales_floored(Sales_floored < 100) = 100;
+
+  Sales_norm = Sales / max(Sales(:));
+
+  sub = Sales(end-1:end, end-1:end);   % Bonus
+
+EXPECTED OUTPUT:
+  Rows: 4, Cols: 4
+  Top salesperson: row 3 with total 660
+  totals   = [555; 515; 660; 385]
+  avg_per_q = [122.50  112.50  133.75  160.00]
+  sub = [90 210; 115 100]
+
+KEY INSIGHTS:
+  - sum(A,2) collapses across cols → one number per row (4×1 result).
+  - sum(A,1) collapses across rows → one number per col (1×4 result).
+  - max(Sales(:)) flattens first to get global max. max(Sales) gives col-wise max.
+  - end-1:end gives last 2. To get last n use end-(n-1):end.
+
+
+================================================================================
+  TOPIC 3: COLON OPERATOR & INDEXING
+================================================================================
+
+KEY CONCEPTS
+------------
+- Colon has 3 uses: range generation, selecting rows/cols, flattening (A(:)).
+- Logical indexing selects elements by condition, not position.
+- find() returns indices. Logical indexing returns values.
+- end adapts to actual array size at runtime — always prefer it over hardcoding.
+- Growing arrays inside loops is slow. Pre-allocate with zeros() instead.
+
+QUICK REFERENCE — COLON
+------------------------
+  1:5               % [1 2 3 4 5]
+  0:2:10            % [0 2 4 6 8 10]
+  5:-1:1            % [5 4 3 2 1]  countdown
+  A(2:4, :)         % rows 2-4, all cols
+  A(:, 1:3)         % all rows, cols 1-3
+  A(:)              % flatten to column (column-major)
+
+QUICK REFERENCE — INDEXING PATTERNS
+-------------------------------------
+  v(3)              % single element
+  v(2:5)            % range
+  v(1:2:end)        % every other element
+  v([1 3 6])        % arbitrary positions
+  v(end-1:end)      % last two elements
+  v(end:-1:1)       % reverse the vector
+
+QUICK REFERENCE — LOGICAL INDEXING
+------------------------------------
+  v(v > 10)         % values where condition true
+  v(v > 10) = 0     % assign to matching elements
+  v(v>5 & v<20)     % AND condition
+  v(v<5 | v>30)     % OR condition
+  find(v > 10)      % INDICES where condition true
+  any(v > 40)       % at least one element satisfies
+  all(v > 0)        % all elements satisfy
+
+[INTERVIEW TRAP] v(end-1:end) = last 2 elements. end-5:end = last 6, not 5.
+                 For last n: use end-(n-1):end.
+[INTERVIEW TRAP] A(:) reads column-by-column (column-major), not row-by-row.
+[INTERVIEW TRAP] Use logical indexing (v(v>x)) for values, find() for positions.
+[INTERVIEW TRAP] Pre-allocate arrays before loops: v = zeros(1,n); then fill.
+
+--------------------------------------------------------------------------------
+EXERCISE 3: The Signal Cleaner
+--------------------------------------------------------------------------------
+DATA:
+  signal = [4 17 3 55 8 102 13 67 2 88 44 9 76 31 5]
+
+TASK (no loops, no hardcoded positions):
+  1. Odd-indexed samples (1,3,5,...) → odd_samples
+  2. Last 5 readings → tail
+  3. Samples index 4 to 10 → window
+  4. Values above 50 → high_vals  |  their indices → high_idx
+  5. Copy with noise floor at 10 → cleaned
+  6. Divide by max so values in [0,1] → normalized
+  7. Count readings between 10 and 50 inclusive → mid_count
+  8. Reverse signal using colon only (no flip()) → rev_signal
+
+BONUS: Replace the 3 largest values with Inf in one line — no loops.
+
+SOLUTION:
+----------
+  signal = [4 17 3 55 8 102 13 67 2 88 44 9 76 31 5];
+
+  odd_samples = signal(1:2:end);
+  tail        = signal(end-4:end);
+  window      = signal(4:10);
+  high_vals   = signal(signal > 50);
+  high_idx    = find(signal > 50);
+
+  cleaned     = signal;
+  cleaned(cleaned < 10) = 10;
+
+  normalized  = signal / max(signal);
+  mid_count   = sum(signal >= 10 & signal <= 50);
+  rev_signal  = signal(end:-1:1);
+
+  % Bonus
+  s_copy = signal;
+  [~, sort_idx] = sort(s_copy, 'descend');
+  s_copy(sort_idx(1:3)) = Inf;
+
+EXPECTED OUTPUT:
+  odd_samples =  4   3   8  13   2  44  76   5
+  tail        =  44   9  76  31   5
+  window      =  55   8  102  13  67   2  88
+  high_vals   =  55  102  67  88  76
+  high_idx    =   4   6   8  10  13
+  cleaned     =  10  17  10  55  10  102  13  67  10  88  44  10  76  31  10
+  mid_count   =  5
+  rev_signal  =  5  31  76   9  44  88   2  67  13  102   8  55   3  17   4
+  s_copy      =  4  17   3  Inf   8  Inf  13  Inf   2  88  44   9  76  31   5
+
+KEY INSIGHTS:
+  - 1:2:end elegantly picks odd indices for any length vector.
+  - sum(logical_array) counts true elements — the standard count-by-condition idiom.
+  - signal(end:-1:1) reverses using negative step. Clean and no extra function needed.
+  - ~ discards the sorted values; sort_idx gives the position order from largest down.
+
+
+================================================================================
+  TOPIC 4: ARITHMETIC OPERATORS & BUILT-IN FUNCTIONS
+================================================================================
+
+KEY CONCEPTS
+------------
+- Math functions (sqrt, exp, log, sin...) apply element-wise to arrays automatically.
+- floor/fix differ on negatives. ceil/fix differ on negatives.
+- mod() sign follows divisor. rem() sign follows dividend.
+- Use && and || (short-circuit) in if conditions. Use & and | on arrays.
+- ~= is "not equal" in MATLAB (not !=).
+
+QUICK REFERENCE — MATH FUNCTIONS
+----------------------------------
+  sqrt(x)           % square root (element-wise)
+  abs(x)            % absolute value
+  exp(x)            % e^x
+  log(x)            % natural log
+  log2(x)           % log base 2
+  log10(x)          % log base 10
+  sin/cos/tan(x)    % trig in RADIANS
+  sind/cosd(x)      % trig in DEGREES
+  sign(x)           % -1, 0, or 1
+  mod(a, b)         % remainder, sign = sign of b
+  rem(a, b)         % remainder, sign = sign of a
+  factorial(n)      % n!
+  gcd(a,b)          % greatest common divisor
+  min(a, b)         % element-wise min — use to clamp ceiling
+  max(a, b)         % element-wise max — use to clamp floor
+
+QUICK REFERENCE — ROUNDING
+----------------------------
+  round(x)          % nearest integer (banker's at .5)
+  floor(x)          % toward -Inf
+  ceil(x)           % toward +Inf
+  fix(x)            % toward zero (truncate)
+
+  round to N decimals:  round(x * 10^N) / 10^N
+
+QUICK REFERENCE — TYPE CHECKING
+---------------------------------
+  isnumeric(x)      % double, int32, etc.
+  isinteger(x)      % only int8/16/32/64 types (NOT plain 5!)
+  islogical(x)      % logical type
+  ischar(x)         % char arrays
+  isempty(x)        % any dimension is 0
+  isscalar(x)       % 1×1
+  isvector(x)       % 1×n or n×1
+
+QUICK REFERENCE — COMPARISON & LOGIC
+--------------------------------------
+  ==  ~=  >  >=  <  <=     % comparisons → logical arrays
+  &   |   ~   xor(a,b)     % element-wise logical (for arrays)
+  &&  ||                   % short-circuit scalar (for if conditions)
+
+[INTERVIEW TRAP] -3 .^ 2  → -9  (power first, then negate). Use (-3).^2 for 9.
+[INTERVIEW TRAP] floor(-2.7)=-3  but  fix(-2.7)=-2  (they differ on negatives).
+[INTERVIEW TRAP] mod(-7,3)=2  but  rem(-7,3)=-1  (sign follows divisor vs dividend).
+[INTERVIEW TRAP] isinteger(5) → 0.  The literal 5 is a double, not int32.
+[INTERVIEW TRAP] std() uses N-1 by default (sample). Python numpy uses N (population).
+[INTERVIEW TRAP] ~= not != for not-equal in standard MATLAB.
+
+--------------------------------------------------------------------------------
+EXERCISE 4: The Grade Analyser
+--------------------------------------------------------------------------------
+DATA:
+  scores = [72 45 88 91 34 67 55 78 95 61]
+  curve  = [5 10 3 2 8 5 7 4 1 6]
+
+TASK:
+  1. adjusted = scores + curve, capped at 100 (one line, no loop)
+  2. Mean, median, std of adjusted — rounded to 2 decimal places (scaling trick)
+  3. Count students with adjusted >= 60 → pass_count
+  4. Each score as % of class max → pct_of_max (1 decimal place)
+  5. Index of highest and lowest scorers (two-output form of max/min)
+  6. Logical vector: true where adjusted >= 75 → grade_flags
+  7. Are ALL students above 30? Is ANY student at exactly 100?
+  8. What % of each adjusted score came from the curve? → curve_pct (1 decimal)
+
+BONUS: Find the second highest score without using sort() — two lines only.
+
+SOLUTION:
+----------
+  scores = [72 45 88 91 34 67 55 78 95 61];
+  curve  = [5 10 3 2 8 5 7 4 1 6];
+
+  adjusted   = min(scores + curve, 100);
+
+  avg_score  = round(mean(adjusted) * 100) / 100;
+  med_score  = round(median(adjusted) * 100) / 100;
+  std_score  = round(std(adjusted) * 100) / 100;
+
+  pass_count = sum(adjusted >= 60);
+
+  pct_of_max = round(adjusted / max(adjusted) * 100 * 10) / 10;
+
+  [~, top_idx] = max(adjusted);
+  [~, bot_idx] = min(adjusted);
+
+  grade_flags  = adjusted >= 75;
+
+  all_above_30 = all(adjusted > 30);
+  any_perfect  = any(adjusted == 100);
+
+  total_curve  = sum(curve);
+  curve_pct    = round(curve ./ adjusted * 100 * 10) / 10;
+
+  % Bonus
+  first_max   = max(adjusted);
+  second_high = max(adjusted(adjusted < first_max));
+
+EXPECTED OUTPUT:
+  adjusted    =  77  55  91  93  42  72  62  82  96  67
+  avg_score   =  73.7
+  med_score   =  74.5
+  std_score   =  17.17
+  pass_count  =  8
+  pct_of_max  =  80.2  57.3  94.8  96.9  43.8  75.0  64.6  85.4  100.0  69.8
+  top_idx     =  9
+  bot_idx     =  5
+  grade_flags =  1  0  1  1  0  0  0  1  1  0
+  all_above_30 = 1
+  any_perfect  = 0
+  total_curve  = 51
+  curve_pct   =  6.5  18.2  3.3  2.2  19.0  6.9  11.3  4.9  1.0  9.0
+  second_high  = 93
+
+KEY INSIGHTS:
+  - min(scores+curve, 100) clamps element-wise — one-liner ceiling. Elegant MATLAB.
+  - [~, idx] = max(v) — tilde discards first output, keeps index only.
+  - curve ./ adjusted — must use ./ for element-wise division of two vectors.
+  - Bonus: mask then max — adjusted(adjusted < first_max) excludes the max value(s)
+    before finding the second highest. Works even if max appears multiple times.
+
+
+================================================================================
+  PHASE 1 INTERVIEW CHEAT SHEET — ALL TRAPS IN ONE PLACE
+================================================================================
+
+OPERATOR TRAPS
+--------------
+  A * B     matrix multiply      vs    A .* B   element-wise
+  A ^ 2     matrix power         vs    A .^ 2   element-wise
+  A / B     matrix right divide  vs    A ./ B   element-wise
+  A'        conjugate transpose  vs    A.'      plain transpose
+  -3 .^ 2  → -9  (power before negate). Use (-3).^2 for +9.
+
+INDEXING TRAPS
+--------------
+  MATLAB is 1-based. A(1,1) is top-left. A(0) throws an error.
+  length(A) → largest dimension, NOT number of rows.
+  A(:) flattens column-by-column (column-major order).
+  max(A) → col-wise maxima. max(A(:)) → global maximum.
+  end-4:end = last 5 elements. end-(n-1):end = last n elements.
+
+ROUNDING TRAPS
+--------------
+  floor(-2.7) → -3    fix(-2.7) → -2     (differ on negatives)
+  ceil(-2.7)  → -2    round(2.5) → 2 (banker's — nearest even)
+
+NaN / TYPE TRAPS
+----------------
+  NaN == NaN → 0 (false). Always use isnan().
+  class(NaN) → 'double' (NaN is not a type).
+  isinteger(5) → 0  (5 is a double). Need isinteger(int32(5)) for 1.
+  logical 0/1 uses 1 byte. double uses 8 bytes. Matters at scale.
+
+FUNCTION TRAPS
+--------------
+  mod(-7,3) → 2   rem(-7,3) → -1   (sign of divisor vs dividend)
+  std(v) uses N-1 (sample). Python numpy std() uses N (population).
+  sum(A,1) → col-wise.  sum(A,2) → row-wise.  Easy to mix up.
+  ~= not !=  for not-equal in standard MATLAB.
+  && and || for scalar if conditions.  & and | for arrays.
+
+================================================================================
+  END OF PHASE 1 REVISION GUIDE
+  Good luck with your interview!
+================================================================================
