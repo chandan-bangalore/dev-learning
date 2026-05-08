@@ -92,6 +92,21 @@ void search(struct Node **head, int val) {
 	printf("%d not found\n", val);
 }
 
+void search_new(struct Node **head, int val) {
+	if (*head == NULL) { printf("Empty list\n"); return;}
+	struct Node *temp = *head;
+	int i = 0;
+	while ( temp->next != NULL && (temp->val != val) ) {
+		temp = temp->next;
+		i++;
+	}
+	if(temp->val == val) {
+		printf("%d found at index %d\n",val, i);
+	} else {
+		printf("%d not found\n", val);
+	}
+}
+
 void reverse(struct Node **head) {
 	struct Node *curr = *head, *prev = NULL, *next = NULL;
 	while (curr != NULL) {
@@ -118,7 +133,7 @@ int main() {
 	
 	struct Node *head = NULL;
 	
-	bool rev = true;
+	bool rev = false;
 	
 	if (0) {
 		struct Node *n0 = createNode(10);
@@ -151,8 +166,8 @@ int main() {
 		deleteValue(&head, 15);
 		print(head);
 		
-		search(&head, 20); // and print
-		search(&head, 99); // and print		
+		search_new(&head, 20); // and print
+		search_new(&head, 99); // and print		
 	} else {
 		struct Node *n1 = createNode(10);
 		struct Node *n2 = createNode(20);

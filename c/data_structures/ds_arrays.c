@@ -1,7 +1,7 @@
 #include <stdio.h>
 
 // Function to print the array
-void printArray(int arr[], int size) {
+void printArray(int *arr, int size) {
     printf("Array: ");
     for (int i = 0; i < size; i++) {
         printf("[%d] ", arr[i]);

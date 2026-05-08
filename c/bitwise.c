@@ -21,10 +21,12 @@ bool test_bit(uint8_t inp, uint8_t pos) {
 
 uint8_t extract_bits(uint8_t inp) {
 	uint8_t out = (inp >> 4) & 0x0F;
+	return out;
 }
 
 uint8_t insert_bits(uint8_t inp, uint8_t num) {
 	uint8_t out = (inp & 0x0f) | ((num & 0x0f) << 4);
+	return out;
 }
 /*
 gcc -g myprogram.c -o myprogram
