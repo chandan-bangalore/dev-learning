@@ -29,12 +29,12 @@ int main() {
 
 ### Q2. What is the difference between pointer and reference?
 
-| Feature | Pointer | Reference (C++ only) |
-|---|---|---|
-| Can be NULL | Yes | No |
-| Can be reassigned | Yes | No |
-| Needs dereferencing | Yes (`*p`) | No (transparent) |
-| Has own address | Yes | No |
+| Feature 				| Pointer 		| Reference (C++ only) |
+|--- |--- |--- |
+| Can be NULL 			| Yes 			| No |
+| Can be reassigned 	| Yes 			| No |
+| Needs dereferencing 	| Yes (`*p`) 	| No (transparent) |
+| Has own address 		| Yes 			| No |
 
 In C, references don't exist — only pointers. In embedded C, we always use pointers.
 
@@ -207,12 +207,12 @@ int main() {
 
 ### Q11. What is the difference between pointer and array?
 
-| Feature | Array | Pointer |
-|---|---|---|
-| Memory | Fixed block allocated | Stores an address |
-| Reassignable | No | Yes |
-| sizeof | Total array size | Size of pointer (4 or 8 bytes) |
-| Arithmetic | Limited | Full arithmetic |
+| Feature 	   | Array 				   | Pointer |
+|--- |---|---|
+| Memory       | Fixed block allocated | Stores an address |
+| Reassignable | No                    | Yes |
+| sizeof       | Total array size      | Size of pointer (4 or 8 bytes) |
+| Arithmetic   | Limited               | Full arithmetic |
 
 ```c
 int arr[5] = {1,2,3,4,5};
@@ -271,7 +271,7 @@ int main() {
 
 ---
 
-### Q14. How do you pass a pointer to a function?
+### Q14. How do you pass a pointer (variable) to a function?
 
 Pass the address of a variable using `&`. The function receives a pointer parameter and can modify the original variable through it.
 
@@ -355,10 +355,10 @@ int *p3 = &x;   // initialized to valid address
 ### Q18. Difference between `const int *p` and `int * const p`.
 
 | Declaration | Pointer changeable? | Value changeable? |
-|---|---|---|
-| `const int *p` | Yes | No |
-| `int * const p` | No | Yes |
-| `const int * const p` | No | No |
+| ---         | ---                 | ---               |
+| `const int *p`        | Yes | No |
+| `int * const p`       | No  | Yes|
+| `const int * const p` | No  | No |
 
 ```c
 int x = 10, y = 20;
@@ -380,6 +380,37 @@ Double pointer (`**`) is used to:
 1. Modify a pointer inside a function (pass pointer by pointer)
 2. Implement 2D dynamic arrays
 3. Array of strings
+
+```
+#include <stdio.h>
+#include <stdlib.h>
+
+int main() {
+    int rows = 3, cols = 4;
+
+    // allocate row pointers
+    int **arr = malloc(rows * sizeof(int *));
+
+    // allocate each row
+    for (int i = 0; i < rows; i++) {
+        arr[i] = malloc(cols * sizeof(int));
+    }
+
+    // process...
+
+    // free memory
+    for (int i = 0; i < rows; i++) {
+        free(arr[i]);
+		arr[i] = NULL;
+    }
+
+    free(arr);
+	arr = NULL;
+
+    return 0;
+}
+
+```
 
 ```c
 #include <stdio.h>
@@ -684,14 +715,14 @@ int main() {
 
 ### Q33. Difference between stack and heap?
 
-| Feature | Stack | Heap |
+| Feature       | Stack             | Heap |
 |---|---|---|
-| Allocation | Automatic | Manual (malloc/free) |
-| Size | Small (few KB–MB) | Large (limited by RAM) |
-| Speed | Very fast | Slower |
-| Management | Compiler | Programmer |
-| Fragmentation | No | Yes |
-| Lifetime | Function scope | Until freed |
+| Allocation    | Automatic         | Manual (malloc/free) |
+| Size          | Small (few KB–MB) | Large (limited by RAM) |
+| Speed         | Very fast			| Slower |
+| Management    | Compiler          | Programmer |
+| Fragmentation | No                | Yes |
+| Lifetime      | Function scope    | Until freed |
 
 ---
 
@@ -763,12 +794,12 @@ int main() {
 
 ### Q37. Difference between malloc and calloc?
 
-| Feature | malloc | calloc |
+| Feature        | malloc          | calloc |
 |---|---|---|
-| Arguments | 1 (total bytes) | 2 (count, element size) |
-| Initialization | No (garbage) | Yes (zeros) |
-| Speed | Slightly faster | Slightly slower (zeroing) |
-| Use case | General | Arrays where 0-init needed |
+| Arguments      | 1 (total bytes) | 2 (count, element size) |
+| Initialization | No (garbage)    | Yes (zeros) |
+| Speed          | Slightly faster | Slightly slower (zeroing) |
+| Use case       | General         | Arrays where 0-init needed |
 
 ```c
 int *a = (int*)malloc(5 * sizeof(int));   // garbage values
@@ -992,7 +1023,7 @@ int main() {
 
 The compiler inserts **invisible padding bytes** between struct members to ensure each member starts at its natural alignment boundary.
 
-```c
+```
 #include <stdio.h>
 struct Padded {
     char  a;    // 1 byte  [offset 0]
@@ -1016,8 +1047,6 @@ int main() {
 }
 ```
 
----
-
 ### Q49. How does compiler allocate local variables?
 
 Local variables are allocated on the **stack** by adjusting the stack pointer. The compiler calculates total space needed and reserves it at function entry.
@@ -1031,8 +1060,6 @@ void foo() {
     // All freed when function returns: SP restored
 }
 ```
-
----
 
 ### Q50. What is global memory?
 
@@ -1367,10 +1394,10 @@ uint8_t bit4 = (reg >> 4) & 1;  // 1
 
 ### Q67. Difference between logical and arithmetic shift?
 
-| Shift type | Left bits filled with | Used for |
+| Shift type          | Left bits filled with | Used for     |
 |---|---|---|
-| Logical (unsigned) | 0 | unsigned numbers |
-| Arithmetic (signed) | sign bit (0 or 1) | signed division |
+| Logical (unsigned)  | 0                 | unsigned numbers |
+| Arithmetic (signed) | sign bit (0 or 1) | signed division  |
 
 ```c
 uint8_t u = 0b10000000;  // 128 unsigned
@@ -1467,7 +1494,13 @@ int main() {
 
 Use `n & (-n)` or `n & (~n + 1)` — returns a value with only the lowest set bit.
 
-```c
+```
+n        =  1011 0100
+step1: flip all bits
+~n       =  0100 1011
+step2: add 1
+-n       =  0100 1100
+
 #include <stdio.h>
 int main() {
     int n = 0b10110100;
@@ -1480,8 +1513,12 @@ int main() {
 ---
 
 ### Q73. What is bit field in struct?
-
-Bit fields allow you to specify the exact **number of bits** each struct member uses. Ideal for hardware register modeling.
+```
+struct Normal {
+    unsigned int enable;  // wastes 32 bits just to store 0 or 1!
+};
+```
+Bit fields let you say exactly how many bits each field uses. Ideal for hardware register modeling.
 
 ```c
 #include <stdio.h>
@@ -1494,12 +1531,30 @@ typedef struct {
 
 int main() {
     GPIOConfig cfg = {0};
-    cfg.enable = 1;
-    cfg.mode   = 2;
-    cfg.speed  = 5;
+    cfg.enable = 1; // sets bit 0       → 0000 0001
+    cfg.mode   = 2; // sets bits 1-2    → 0000 0101  (2 = 10b, shifted to bits 1-2)
+    cfg.speed  = 5; // sets bits 3-5    → 0010 1101  (5 = 101b, shifted to bits 3-5)
     printf("Size: %zu bytes\n", sizeof(cfg));  // 4 (compiler may pad)
     return 0;
 }
+
+// compiler handles all the shifting and masking for you!
+// else you would have to do this manually
+uint8_t reg = 0;
+reg |= (1 & 0x1);          // enable — manual way
+reg |= (2 & 0x3) << 1;     // mode
+reg |= (5 & 0x7) << 3;     // speed
+
+
+Please note: Compiler may add padding between fields for alignment:
+Advised to use __attribute__((packed))
+
+typedef struct __attribute__((packed)) {
+    uint8_t enable  : 1;
+    uint8_t mode    : 2;
+    uint8_t speed   : 3;
+    uint8_t reserved: 2;
+} GPIOConfig;   // guaranteed 1 byte, no padding
 ```
 
 ---
@@ -1511,8 +1566,8 @@ Bit masks configure hardware registers — setting/clearing/reading individual b
 ```c
 // ARM Cortex-M GPIO example
 #define GPIO_BASE    0x40020000
-#define MODER_OFFSET 0x00
-#define ODR_OFFSET   0x14
+#define MODER_OFFSET 0x00 // MODER controls the mode of each GPIO pin — 2 bits per pin:
+#define ODR_OFFSET   0x14 // ODR controls the actual output voltage — 1 bit per pin:
 
 volatile uint32_t *GPIOA_MODER = (uint32_t*)(GPIO_BASE + MODER_OFFSET);
 volatile uint32_t *GPIOA_ODR   = (uint32_t*)(GPIO_BASE + ODR_OFFSET);
@@ -1524,6 +1579,15 @@ void led_init() {
 void led_on()  { *GPIOA_ODR |=  (1 << 5); }
 void led_off() { *GPIOA_ODR &= ~(1 << 5); }
 ```
+
+volatile tells the compiler:
+- don't optimize this away
+- don't cache this value in a register
+- always read/write directly from the actual address
+
+If asked: “What are different types of addresses in embedded systems?”
+Say: “We typically deal with Flash (program memory where code is saved), RAM (data memory including stack and heap), memory-mapped I/O for peripherals, 
+and different segments like text, data, and BSS. Additionally, CPU registers and special function registers are also accessed via addresses.”
 
 ---
 
@@ -1544,7 +1608,7 @@ uint32_t val = *reg;   // read from register
 
 ---
 
-### Q76. How do you write to hardware register?
+### Q76. How do you write to hardware register? (No Idea)
 
 Cast the register address to a volatile pointer and use the dereference operator to write.
 
@@ -1577,11 +1641,11 @@ Data: 12 34 56 78            Data: 78 56 34 12
 
 ### Q78. Difference between little endian and big endian?
 
-| Feature | Little Endian | Big Endian |
-|---|---|---|
-| LSB stored at | Lowest address | Highest address |
-| MSB stored at | Highest address | Lowest address |
-| Examples | x86, ARM (default) | Network protocols, MIPS |
+| Feature       | Little Endian      | Big Endian              |
+| ---|---|---|
+| LSB stored at | Lowest address     | Highest address         |
+| MSB stored at | Highest address    | Lowest address          |
+| Examples      | x86, ARM (default) | Network protocols, MIPS |
 
 ```c
 // x86 is little endian:
@@ -1687,12 +1751,12 @@ int main() {
 
 ### Q83. Difference between struct and union?
 
-| Feature | Struct | Union |
+| Feature| Struct                       | Union |
 |---|---|---|
-| Memory | Each member has own | All share same memory |
-| Size | Sum of all members + padding | Size of largest member |
-| Access | All members valid | Only last written is valid |
-| Use | Group related data | Interpret same memory differently |
+| Memory | Each member has own          | All share same memory |
+| Size   | Sum of all members + padding | Size of largest member |
+| Access | All members valid            | Only last written is valid |
+| Use    | Group related data           | Interpret same memory differently |
 
 ---
 
@@ -2221,10 +2285,10 @@ int main() {
 
 ### Q109. Difference between strcpy and strncpy?
 
-| Function | Copies n bytes? | Always null-terminates? | Safe? |
+| Function| Copies n bytes? | Always null-terminates? | Safe? |
 |---|---|---|---|
-| strcpy | No limit | Yes (copies source \0) | No — overflow risk |
-| strncpy | Yes | Not if source >= n | Safer — but add \0 manually |
+| strcpy  | No limit        | Yes (copies source \0)  | No — overflow risk |
+| strncpy | Yes             | Not if source >= n      | Safer — but add \0 manually |
 
 ```c
 char dst[5];
@@ -2797,13 +2861,13 @@ int* safe_static() {
 
 ### Q135. Difference between macro and function?
 
-| Feature | Macro | Function |
+| Feature       | Macro                            | Function |
 |---|---|---|
-| Evaluation | Preprocessor (text substitution) | Compiler (actual code) |
-| Type checking | None | Yes |
-| Overhead | Zero (inline) | Call/return overhead |
-| Debugging | Harder | Easier |
-| Side effects | Dangerous with expressions | Safe |
+| Evaluation    | Preprocessor (text substitution) | Compiler (actual code) |
+| Type checking | None                             | Yes |
+| Overhead      | Zero (inline)                    | Call/return overhead |
+| Debugging     | Harder                           | Easier |
+| Side effects  | Dangerous with expressions       | Safe |
 
 ```c
 #define SQUARE_MACRO(x)  ((x) * (x))
@@ -2961,10 +3025,10 @@ int main() {
 
 ### Q143. Difference between const and volatile?
 
-| Keyword | Meaning | Who changes it? |
+| Keyword          | Meaning                                  | Who changes it? |
 |---|---|---|
-| `const` | Program cannot write it | Set once at init |
-| `volatile` | Hardware/ISR can change it | External to program flow |
+| `const`          | Program cannot write it                  | Set once at init |
+| `volatile`       | Hardware/ISR can change it               | External to program flow |
 | `const volatile` | Program can't write, hardware can change | Read-only hardware status register |
 
 ```c
@@ -3071,14 +3135,14 @@ q = NULL;
 
 ### Q148. What tools help debugging C programs?
 
-| Tool | Purpose | Usage |
+| Tool             | Purpose                         | Usage |
 |---|---|---|
-| GDB | Interactive debugger | `gdb ./prog` |
-| Valgrind | Memory leak/error detection | `valgrind ./prog` |
+| GDB              | Interactive debugger            | `gdb ./prog` |
+| Valgrind         | Memory leak/error detection     | `valgrind ./prog` |
 | AddressSanitizer | Buffer overflow, use-after-free | `-fsanitize=address` |
-| UBSan | Undefined behavior | `-fsanitize=undefined` |
-| cppcheck | Static analysis | `cppcheck src/` |
-| JTAG/SWD | On-chip embedded debugging | OpenOCD + GDB |
+| UBSan            | Undefined behavior              | `-fsanitize=undefined` |
+| cppcheck         | Static analysis                 | `cppcheck src/` |
+| JTAG/SWD         | On-chip embedded debugging      | OpenOCD + GDB |
 
 ```bash
 # Compile with sanitizers:

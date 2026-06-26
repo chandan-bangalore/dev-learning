@@ -2,6 +2,16 @@
 
 > Source: embeddedshiksha.com — Helping Embedded System Engineers to Clear Interviews
 
+
+Before starting with this, let us understand the compilation stages in C.
+
+>>  
+C Program (.c)		: 							: source code.
+Preprocessor (.i)	: gcc -E prog.c -o prog.i	: expands macros, removes comments and includes header files.
+Compiler (.s)		: gcc -S prog.i -o prog.s	: converts preprocessed source code to assembly code, intermediate code generation and optimization.
+Assembler (.o)		: gcc -c prog.s -o prog.o	: converts assembly instructions to binary instructions.
+Linker -> Executable: gcc prog.o -o prog.out	: combines 1/more object files and links external libraries to produce executable file.
+
 ---
 
 ## Section 1: Pointers (30 Questions)
@@ -13,25 +23,25 @@ A pointer is a variable that stores the **memory address** of another variable. 
 
 ### Why Pointers Matter in Embedded Systems
 - **Hardware registers** are fixed memory addresses — you access them only through pointers
-- **Device drivers** read/write peripherals by dereferencing hardware addresses like `*(volatile uint32_t*)0x40020000`
+- **Device drivers** read/write peripherals (i/o device) by dereferencing hardware addresses like `*(volatile uint32_t*)0x40020000`
 - **Dynamic memory**, **arrays**, **strings**, and **function callbacks** all rely on pointers
 - Without pointers, you cannot write interrupt service routines, DMA transfers, or memory-mapped I/O
 
 ### Key Concepts to Master
-| Concept | Why It Matters |
-| --------| ---------------|
-| Pointer arithmetic | Traversing arrays, buffers, memory blocks |
-| NULL pointer | Safety check before dereferencing |
-| Dangling pointer | Common source of crashes in embedded systems |
-| void pointer | Generic memory operations like memcpy |
-| Function pointer | Callbacks, ISR tables, driver interfaces |
-| Double pointer | Dynamic 2D arrays, pointer-to-pointer passing |
-| const with pointer | Read-only hardware registers |
+| Concept               | Why It Matters |
+| --------| ------------|
+| Pointer arithmetic    | Traversing arrays, buffers, memory blocks |
+| NULL pointer          | Safety check before dereferencing |
+| Dangling pointer      | Common source of crashes in embedded systems |
+| void pointer          | Generic memory operations like memcpy |
+| Function pointer      | Callbacks, ISR tables, driver interfaces |
+| Double pointer        | Dynamic 2D arrays, pointer-to-pointer passing |
+| const with pointer    | Read-only hardware registers |
 | volatile with pointer | Registers that change outside program control |
 
 ### Common Pitfall
 ```c
-int *p;        // Uninitialized — points to garbage address
+int *p;        // Uninitialized — points to garbage address: int *p = malloc(sizeof(int));
 *p = 10;       // CRASH — writing to unknown memory location
 // Always initialize: int *p = NULL; or int *p = &some_var;
 ```
@@ -54,7 +64,7 @@ HIGH ADDRESS
 │   Heap          │ ← Dynamic allocation (malloc/calloc/free)
 │   (grows ↑)     │   Manual management — source of leaks!
 ├─────────────────┤
-│   BSS segment   │ ← Uninitialized global/static variables
+│   BSS segment   │ ← Uninitialized global/static variables (Block started by symbol)
 ├─────────────────┤
 │   Data segment  │ ← Initialized global/static variables
 ├─────────────────┤
@@ -63,12 +73,12 @@ LOW ADDRESS
 ```
 
 ### The Four Memory Functions
-| Function | Initializes? | Use Case |
+| Function              | Initializes? | Use Case |
 |---|---|---|
-| `malloc(size)` | No (garbage) | General allocation |
-| `calloc(n, size)` | Yes (zeros) | Arrays, safe buffers |
-| `realloc(ptr, size)` | Partial | Resize existing allocation |
-| `free(ptr)` | — | Release memory |
+| `malloc(size)` 		| No (garbage) | General allocation |
+| `calloc(n, size)` 	| Yes (zeros)  | Arrays, safe buffers |
+| `realloc(ptr, size)`  | Partial      | Resize existing allocation |
+| `free(ptr)` 			| —            | Release memory |
 
 ### Why This Matters in Embedded
 - Embedded systems often run **forever** — a tiny memory leak kills the system after days
@@ -84,7 +94,29 @@ free(p);
 *p = 'A';   // USE AFTER FREE — dangling pointer bug!
 p = NULL;   // Always NULL after free
 ```
+```
 
+### storage classes in C: 
+- it defines where a variable is stored, its lifetime, scope, and visibility.
+1. auto		: Default for local variables (stack memory), memory allocated when function starts, destroyed automatically when function ends
+2. static	: initialized once and preserved between calls, lifetime = entire program. Stored in data segment.
+3. extern	: Used to access a global variable defined elsewhere. file1.c: int x = 100; file2.c: extern int x;
+4. register	: Suggests storing variable in CPU register for faster access. Mostly ignored by modern compilers.
+downside of register is: you cannot access address : &i : because register variables may not have memory addresses.
+```
+#include <stdio.h>
+
+int main() {
+    register int i;
+
+    for (i = 0; i < 5; i++) {
+        printf("%d ", i);
+    }
+
+    return 0;
+}
+```
+```
 ---
 
 ## Section 3: Bit Manipulation (25 Questions)
@@ -116,15 +148,73 @@ uint8_t reg = 0b00110101;   // Example register value
 RCC_AHB1ENR |= (1 << 0);   // SET bit 0 to enable GPIOA clock
 ```
 
+```
+int count_set_bits(uint32_t n) {
+    int count = 0;
+
+    for (int i = 0; i < 32; i++) {
+        if (((n >> i) & 1U)) {
+            count++;
+        }
+    }
+
+    return count;
+}
+
+int count_unset_bits(uint32_t n) {
+    int count = 0;
+
+    for (int i = 0; i < 32; i++) {
+        if (((n >> i) & 1U) == 0) {
+            count++;
+        }
+    }
+
+    return count;
+}
+
+uint32_t toggle_bit(uint32_t n, int pos) {
+    return n ^ (1U << pos);
+}
+
+uint32_t toggle_two_bits(uint32_t n, int pos1, int pos2) {
+    n ^= (1U << pos1);
+    n ^= (1U << pos2);
+
+    return n;
+}
+
+int is_bit_set(uint32_t n, int pos) {
+    return ((n >> pos) & 1U);
+}
+
+int is_bit_clear(uint32_t n, int pos) {
+    return (((n >> pos) & 1U) == 0);
+}
+
+void print_binary(uint32_t n) {
+    for (int i = 31; i >= 0; i--) {
+        printf("%u", (n >> i) & 1U);
+
+        if (i % 8 == 0)
+            printf(" ");
+    }
+
+    printf("\n");
+}
+
+```
+
+
 ### Key Topics
-| Topic | Application |
-|---|---|
-| Bit masking | Isolating register fields |
-| Shift operators | Multiplying/dividing by powers of 2 |
-| XOR tricks | Swap without temp, find missing number |
-| Endianness | Protocol parsing, network byte order |
+| Topic                | Application |
+|-------| ----------- |
+| Bit masking          | Isolating register fields |
+| Shift operators      | Multiplying/dividing by powers of 2 |
+| XOR tricks           | Swap without temp, find missing number |
+| Endianness           | Protocol parsing, network byte order |
 | Bit fields in struct | Hardware register modeling |
-| Power of 2 check | Memory alignment validation |
+| Power of 2 check     | Memory alignment validation |
 
 ---
 
@@ -179,7 +269,7 @@ typedef struct __attribute__((packed)) {
     uint8_t  header;
     uint32_t data;
     uint8_t  checksum;
-} Packet;   // sizeof = exactly 6, not 8
+} Packet;   // sizeof = exactly 6, not 12
 ```
 
 ---
@@ -275,12 +365,12 @@ void (*vector_table[])(void) __attribute__((section(".vectors"))) = {
 ```
 
 ### Key Concepts
-| Concept | Use in Embedded |
+| Concept         | Use in Embedded |
 |---|---|
 | Static function | Limits scope to file — prevents name conflicts in drivers |
 | Inline function | Zero call overhead — used in tight ISR loops |
-| Recursion | Carefully avoided — uses stack; can overflow in embedded |
-| Callback | ISR completion notification, RTOS event handling |
+| Recursion       | Carefully avoided — uses stack; can overflow in embedded |
+| Callback        | ISR completion notification, RTOS event handling |
 
 ---
 
@@ -289,15 +379,77 @@ void (*vector_table[])(void) __attribute__((section(".vectors"))) = {
 Debugging embedded systems is harder than desktop — **no console, limited tools, real-time constraints**. Understanding common bugs and how to find them is a core interview skill.
 
 ### The Most Common Embedded Bugs
-| Bug | Cause | Detection |
-|---|---|---|
-| Segmentation fault | NULL/invalid pointer dereference | GDB, address sanitizer |
-| Stack overflow | Deep recursion, large local arrays | Stack canary, MPU |
-| Memory leak | malloc without free | Valgrind, heap monitoring |
-| Dangling pointer | Accessing freed memory | Static analysis, ASan |
-| Race condition | Shared variable without mutex | Thread sanitizer |
-| Undefined behavior | Signed overflow, out-of-bounds | UBSan, -Wall -Wextra |
-| Buffer overflow | Writing past array end | Bounds checking, ASan |
+| Bug 				 | Cause 							  | Detection 				  |
+| --- | ---   | ---       |
+| Segmentation fault | NULL/invalid pointer dereference   | GDB, address sanitizer    |
+| Stack overflow     | Deep recursion, large local arrays | Stack canary, MPU         |
+| Memory leak        | malloc without free                | Valgrind, heap monitoring |
+| Dangling pointer   | Accessing freed memory             | Static analysis, ASan     |
+| Race condition     | Shared variable without mutex      | Thread sanitizer          |
+| Undefined behavior | Signed overflow, out-of-bounds     | UBSan, -Wall -Wextra      |
+| Buffer overflow    | Writing past array end             | Bounds checking, ASan     |
+
+```
+1. Segmentation Fault
+cint *p = NULL;
+*p = 10;  // CRASH — writing to address 0
+Find it: GDB shows exact line → gdb ./a.out → run → bt (backtrace)
+
+2. Stack Overflow
+cvoid infinite(int n) { infinite(n+1); }  // no base case, stack fills up → crash
+// OR
+void foo() { int arr[1000000]; }         // huge local array eats stack instantly
+Find it: Stack canary — compiler places a magic value at stack boundary, if overwritten → abort with "stack smashing detected"
+```
+```
+#include <stdio.h>
+void foo() {
+    int arr[5];
+    arr[6] = 99;   // just slightly past end — more likely to hit canary
+    arr[7] = 99;
+}
+int main() {
+    foo();
+    return 0;
+}
+gcc -fstack-protector-all example.c -o example
+```
+```
+3. Memory Leak
+cvoid leak() {
+    int *p = malloc(100);
+    return;  // forgot free(p) — 100 bytes lost every call
+}
+Find it: valgrind ./a.out reports exactly how many bytes leaked and which line allocated them
+
+4. Dangling Pointer
+cint *p = malloc(4);
+free(p);
+*p = 99;  // silent corruption — writing to freed memory
+Find it: AddressSanitizer (-fsanitize=address) catches the exact line of bad access
+
+5. Race Condition
+cint counter = 0;                    // shared variable
+void thread_fn() { counter++; }    // thread A and B both do this simultaneously
+// counter++ is READ-MODIFY-WRITE, not atomic — one update gets lost silently
+Find it: ThreadSanitizer (-fsanitize=thread) detects conflicting accesses across threads
+
+6. Undefined Behavior
+cint x = INT_MAX;
+x = x + 1;  // signed overflow — UB, compiler may do anything
+Find it: UBSan (-fsanitize=undefined) + -Wall -Wextra flags catch at compile or runtime
+
+7. Buffer Overflow
+cint arr[5];
+arr[10] = 99;  // writing past end — corrupts neighboring memory silently
+Find it: ASan (-fsanitize=address) reports "heap/stack buffer overflow" with exact line
+
+
+Quick rule of thumb: compile with 
+gcc -fstack-protector-all -fsanitize=address,undefined,thread -Wall -Wextra 
+during development — catches 90% of these before they ever reach production.
+#   drop -fsanitize — too slow for production
+```
 
 ### The volatile Keyword — Critical for Embedded
 ```c
@@ -312,13 +464,13 @@ while (*reg == 0) {}   // Correctly re-reads register each iteration
 
 ### Debugging Tools
 | Tool | Purpose |
-|---|---|
-| GDB | Step-through debugging, breakpoints, memory inspection |
-| Valgrind | Memory leak and invalid access detection |
-| AddressSanitizer (ASan) | Buffer overflow, use-after-free |
+| ---  | ---     |
+| GDB                                    | Step-through debugging, breakpoints, memory inspection |
+| Valgrind                               | Memory leak and invalid access detection |
+| AddressSanitizer (ASan)                | Buffer overflow, use-after-free |
 | Static analysis (cppcheck, clang-tidy) | Find bugs without running code |
-| JTAG/SWD | On-chip debugging for embedded targets |
-| Core dump | Snapshot of process state at crash |
+| JTAG/SWD                               | On-chip debugging for embedded targets |
+| Core dump                              | Snapshot of process state at crash |
 
 ### Race Condition Example
 ```c
