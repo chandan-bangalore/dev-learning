@@ -9,7 +9,7 @@ from l1tx import l1tx
 nfft = 512     # 5MHz BW, 15KHz SCS = 25PRB x 12sc = 300sc
 nsc_data = 240 # 12sc x 2rb x 10sym
 nsc_dmrs = 24  # 6sc x 2rb x 2sym 
-cp_len = np.array([22, 18])
+cp_len = np.array([44, 36])
 
 sc_index_min = -nsc_data // 2
 sc_index_max = nsc_data // 2 + 1
