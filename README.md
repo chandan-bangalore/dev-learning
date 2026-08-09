@@ -34,8 +34,8 @@ Python-based examples can be run using Python 3.
 It is recommended to use a Python virtual environment:
 
 ```bash
-python3 -m venv venv
-source venv/bin/activate
+python3 -m venv .venv
+source .venv/bin/activate
 ```
 
 Upgrade pip:
@@ -54,10 +54,12 @@ Additional dependencies may be required for specific examples.
 
 ### Running Wireless Communication Examples
 
-Navigate to the wireless testcases directory:
+Navigate to the wireless directory:
 
 ```bash
-cd wireless/testcases
+cd wireless
+source .venv/bin/activate
+cd testcases
 ```
 
 Run a Python testcase, for example:
