@@ -30,7 +30,7 @@ def l1tx(
 
     # Assign modulated symbols to subcarriers
     fd_data = np.zeros(nfft, dtype=complex)
-    index = sc_index_data + nfft // 2
+    index = sc_index_data + (nfft // 2)
     fd_data[index] = mod_out
     
     # FFT shift

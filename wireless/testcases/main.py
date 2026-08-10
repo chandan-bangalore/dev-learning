@@ -3,33 +3,24 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 from l1tx import l1tx
+from l1rx import l1rx
 
-def main():
-    # Configuration Parameters
-    nfft = 512     # 5MHz BW, 15KHz SCS = 25PRB x 12sc = 300sc
-    nsc_data = 240 # 12sc x 2rb x 10sym
-    nsc_dmrs = 24  # 6sc x 2rb x 2sym 
-    cp_len = np.array([44, 36])
+PLOT = False
 
-    sc_index_min = -nsc_data // 2
-    sc_index_max = nsc_data // 2 + 1
+# Configuration Parameters
+nfft = 64     # 5MHz BW, 15KHz SCS = 25PRB x 12sc = 300sc
+nsc_data = 52 # 12sc x 2rb x 10sym
+nsc_dmrs = 24  # 6sc x 2rb x 2sym 
+cp_len = np.array([16, 16])
 
-    sc_index_data = np.concatenate(
-        (np.arange(sc_index_min, 0), np.arange(1, sc_index_max))
-    )
-
-    # Generate Input Sequence
-    inp_seq = np.random.randint(0, 2, nsc_data)
-
-    # Call L1 PHY TX processing chain
-    mod_out, fd_data, fd_data_shifted, ifft_out, td_data = l1tx(
-        inp_seq,
-        nfft,
-        nsc_data,
-        sc_index_data,
-        cp_len
-    )
-
+def plot_tx_results(
+    inp_seq,
+    mod_out,
+    fd_data,
+    fd_data_shifted,
+    ifft_out,
+    td_data
+):
     # Plot
     plt.figure(figsize=(10, 12))
     nrows = 6
@@ -104,6 +95,54 @@ def main():
     plt.tight_layout()
 
     plt.show()
+
+def main():
+    sc_index_min = -nsc_data // 2
+    sc_index_max = nsc_data // 2 + 1
+
+    sc_index_data = np.concatenate(
+        (np.arange(sc_index_min, 0), np.arange(1, sc_index_max))
+    )
+
+    # Generate Input Sequence
+    inp_seq = np.random.randint(0, 2, nsc_data)
+
+    # Call L1 PHY TX processing chain
+    mod_out, fd_data, fd_data_shifted, ifft_out, td_data = l1tx(
+        inp_seq,
+        nfft,
+        nsc_data,
+        sc_index_data,
+        cp_len
+    )
+
+    # Call L1 PHY RX processing chain
+    rx_seq = l1rx(
+        td_data,
+        nfft,
+        nsc_data,
+        sc_index_data,
+        cp_len
+    )    
+
+    print("Input sequence:")
+    print(inp_seq)
+
+    print("\nRecovered sequence:")
+    print(rx_seq)
+
+    print("\nTX matches RX ?")
+    print(np.array_equal(inp_seq, rx_seq))
+
+    if PLOT:
+        plot_tx_results(
+            inp_seq,
+            mod_out,
+            fd_data,
+            fd_data_shifted,
+            ifft_out,
+            td_data
+        )    
 
 # This is a Python convention — it means "only run main() if this file
 # is executed directly, not when it's imported by another file."
