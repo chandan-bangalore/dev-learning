@@ -3,7 +3,6 @@ import numpy as np
 def l1rx(
     td_data,
     nfft,
-    nsc_data,
     sc_index_data,
     cp_len
 ):
@@ -13,7 +12,6 @@ def l1rx(
     Input:
         td_data        : Time-domain OFDM waveform with CP
         nfft           : FFT size
-        nsc_data       : Number of data subcarriers
         sc_index_data  : Data subcarrier indices
         cp_len         : Cyclic prefix configuration
 
@@ -27,8 +25,8 @@ def l1rx(
     # FFT
     fft_out = np.fft.fft(td_data_no_cp, n=nfft)
 
-    # FFT shift
-    fd_data_shifted = np.fft.fftshift(fft_out)
+    # FFT shift not required as fft already does the shifting
+    fd_data_shifted = fft_out # np.fft.fftshift(fft_out)
 
     # Extract data subcarriers
     index = sc_index_data % nfft

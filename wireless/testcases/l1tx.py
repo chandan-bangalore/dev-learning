@@ -3,7 +3,6 @@ import numpy as np
 def l1tx(
     inp_seq,
     nfft,
-    nsc_data,
     sc_index_data,
     cp_len
 ):
@@ -13,7 +12,6 @@ def l1tx(
     Input:
         inp_seq        : Input binary sequence
         nfft           : FFT size
-        nsc_data       : Number of data subcarriers
         sc_index_data  : Data subcarrier indices
         cp_len         : Cyclic prefix length
 
